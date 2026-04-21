@@ -9,6 +9,7 @@
     "dev": "node --watch server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
+    "postinstall": "npm run prisma:generate",
     "build": "npm run prisma:generate"
   },
   "keywords": [],
