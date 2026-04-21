@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+
+
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum DebtType {
+  RECEIVABLE
+  PAYABLE
+}
+
+enum DebtStatus {
+  PAID
+  UNPAID
+  OVERDUE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ExchangeStatus {
+  pending
+  proof_uploaded
+  ready_for_confirmation
+  under_review
+  confirmed
+  rejected
+  completed
+}
+
+enum ProofStatus {
+  pending
+  verified
+  rejected
+}
+
+enum VerificationResult {
+  matched
+  mismatch
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  username       String?         @unique
+  name           String?
+  age            Int?
+  bio            String?
+  avatarUrl      String?
+  password       String?
+  passcode       String?
+  role           UserRole        @default(USER)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  transactions   Transaction[]
+  debts          Debt[]
+  products       Product[]
+  exchangeOrders ExchangeOrder[]
+}
+
+
+model Transaction {
+  id        String          @id @default(uuid())
+  type      TransactionType
+  amount    Float
+  category  String
+  note      String?
+  date      DateTime        @default(now())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  productId String?
+  product   Product?        @relation(fields: [productId], references: [id])
+  quantity  Int?            @default(1)
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  name         String
+  quantity     Int           @default(0)
+  costPrice    Float
+  sellingPrice Float
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+
+model Debt {
+  id              String      @id @default(uuid())
+  type            DebtType
+  name            String
+  totalAmount     Float
+  remainingAmount Float
+  status          DebtStatus  @default(UNPAID)
+  dueDate         DateTime
+  phone           String?
+  userId          String
+
+  user            User        @relation(fields: [userId], references: [id])
+  payments        Payment[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Payment {
+  id     String   @id @default(uuid())
+  amount Float
+  date   DateTime @default(now())
+  debtId String
+  debt   Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id              String    @id @default(uuid())
+  merchantId      String
+  participantName String
+  messages        Message[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  text           String
+  createdAt      DateTime     @default(now())
+}
+
+model ExchangeOrder {
+  id                    String            @id @default(uuid())
+  userId                String
+  user                  User              @relation(fields: [userId], references: [id])
+  fromCurrency          String
+  toCurrency            String
+  amount                Float
+  exchangeRate          Float
+  expectedReceiveAmount Float
+  referenceCode         String            @unique
+  senderName            String?
+  status                ExchangeStatus    @default(pending)
+  proof                 PaymentProof?
+  logs                  VerificationLog[]
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model PaymentProof {
+  id         String      @id @default(uuid())
+  orderId    String      @unique
+  order      ExchangeOrder @relation(fields: [orderId], references: [id])
+  imageUrl   String
+  uploadedAt DateTime    @default(now())
+  status     ProofStatus @default(pending)
+}
+
+model VerificationLog {
+  id                String             @id @default(uuid())
+  orderId           String
+  order             ExchangeOrder      @relation(fields: [orderId], references: [id])
+  checkedAmount     Float
+  checkedSenderName String
+  checkedReference  String
+  result            VerificationResult
+  createdAt         DateTime           @default(now())
+}
