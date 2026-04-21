@@ -1,10 +1,11 @@
 import { Server } from 'socket.io';
 import chatService from '../services/chatService.js';
+import { config } from '../config/env.js';
 
 const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "*", // Adjust in production
+      origin: config.frontendUrl,
       methods: ["GET", "POST"]
     }
   });

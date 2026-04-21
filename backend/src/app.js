@@ -5,6 +5,7 @@ import 'express-async-errors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import routes from './routes/index.js';
+import { config } from './config/env.js';
 import { errorHandler } from './middlewares/error.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,7 +14,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: config.frontendUrl,
+  credentials: true
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
