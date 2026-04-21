@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useAuthStore } from '@/store/authStore';
 import exchangeService from '@/services/exchangeService';
+import { getServerUrl } from '@/services/api';
 import { ExchangeOrder } from '@/types';
 import { toast } from 'sonner';
 import { 
@@ -174,11 +175,11 @@ export default function AdminExchangeDashboard() {
                   <div className="flex items-center justify-between">
                      {order.proof ? (
                        <button 
-                         onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${order.proof?.imageUrl}`, '_blank')}
+                         onClick={() => window.open(`${getServerUrl()}${order.proof?.imageUrl}`, '_blank')}
                          className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-2xl border border-slate-100 group active:scale-95 transition-all"
                        >
                           <div className="h-6 w-6 rounded-lg overflow-hidden border border-slate-200">
-                             <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${order.proof?.imageUrl}`} className="h-full w-full object-cover" />
+                             <img src={`${getServerUrl()}${order.proof?.imageUrl}`} className="h-full w-full object-cover" />
                           </div>
                           <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600 transition-colors">Artifact</span>
                           <ExternalLink size={10} className="text-slate-300" />

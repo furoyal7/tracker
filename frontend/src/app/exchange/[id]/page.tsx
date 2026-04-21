@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import api, { getServerUrl } from '@/services/api';
 import exchangeService from '@/services/exchangeService';
 import { ExchangeOrder } from '@/types';
 import { toast } from 'sonner';
@@ -265,7 +266,7 @@ export default function OrderDetails({ params }: { params: Promise<{ id: string 
                          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Transmission Artifact</h3>
                          <button 
                             className="text-[9px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-1.5"
-                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${order.proof?.imageUrl}`, '_blank')}
+                            onClick={() => window.open(`${getServerUrl()}${order.proof?.imageUrl}`, '_blank')}
                           >
                             <ExternalLink size={12} /> Expand
                          </button>
@@ -273,7 +274,7 @@ export default function OrderDetails({ params }: { params: Promise<{ id: string 
                       {order.proof && (
                         <div className="rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50">
                            <img 
-                              src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${order.proof.imageUrl}`} 
+                              src={`${getServerUrl()}${order.proof.imageUrl}`} 
                               alt="Audit Proof" 
                               className="w-full h-auto aspect-video object-cover"
                            />
