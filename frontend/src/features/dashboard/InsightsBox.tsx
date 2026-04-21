@@ -23,7 +23,7 @@ export const InsightsBox = () => {
       <div className="space-y-4">
         {insights.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 text-slate-500 text-center">
-            <Info className="h-6 w-6 mb-3 opacity-30" />
+            <Info className="h-6 w-6 mb-3 opacity-32" />
             <p className="text-[10px] font-bold uppercase tracking-widest leading-relaxed">
               Register more transactions to unlock AI insights.
             </p>
