@@ -11,20 +11,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full space-y-2">
         {label && (
-          <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 pl-1 leading-none">
+          <label className="text-xs font-semibold text-slate-700 pl-1 leading-6">
             {label}
           </label>
         )}
         <input
           className={cn(
-            'flex h-12 w-full rounded-[1.25rem] bg-slate-50 border-none px-5 text-sm font-bold text-slate-900 placeholder:text-slate-300 placeholder:font-black placeholder:uppercase placeholder:text-[9px] placeholder:tracking-[0.2em] transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:bg-white focus-visible:shadow-xl focus-visible:shadow-blue-50/50 disabled:cursor-not-allowed disabled:opacity-50',
-            error && 'ring-1 ring-red-500 bg-red-50/30',
+            'flex h-11 w-full rounded-xl bg-white border border-slate-200 px-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/2 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm',
+            error && 'border-red-500 bg-red-50/10 focus-visible:ring-red-500/2 focus-visible:border-red-500',
             className
           )}
           ref={ref}
           {...props}
         />
-        {error && <p className="text-[9px] font-black uppercase tracking-widest text-red-500 pl-1">{error}</p>}
+        {error && <p className="text-[11px] font-medium text-red-500 pl-1 mt-1">{error}</p>}
       </div>
     );
   }

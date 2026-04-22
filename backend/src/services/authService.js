@@ -6,7 +6,7 @@ import { OAuth2Client } from 'google-auth-library';
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const register = async (userData) => {
-  const { email, password } = userData;
+  const { email, password, name, username } = userData;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -19,6 +19,8 @@ export const register = async (userData) => {
     data: {
       email,
       password: hashedPassword,
+      name,
+      username,
     },
   });
 

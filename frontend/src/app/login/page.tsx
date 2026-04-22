@@ -1,28 +1,59 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
-import { GoogleLogin } from '@react-oauth/google';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login';
+  
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleLegacyLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const requestedMode = searchParams.get('mode');
+    if (requestedMode === 'register') setMode('register');
+    else if (requestedMode === 'login') setMode('login');
+  }, [searchParams]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (mode === 'register' && password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setIsLoading(true);
+    
+    const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
+    const payload = mode === 'login' 
+      ? { email, password } 
+      : { email, password, name, username };
+
+    const successMsg = mode === 'login' 
+      ? 'Welcome back! You have successfully signed in.' 
+      : 'Account created successfully. Welcome aboard!';
+
     try {
-      const response: any = await api.post('/auth/login', { email, password });
+      const response: any = await api.post(endpoint, payload);
       setAuth(response.data.user, response.data.token);
-      toast.success('Access Granted • Welcome back');
+      toast.success(successMsg);
       router.push('/');
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Authentication failed');
@@ -31,109 +62,142 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setIsLoading(true);
-    try {
-      const response: any = await api.post('/auth/google', { 
-        idToken: credentialResponse.credential 
-      });
-      setAuth(response.data.user, response.data.token);
-      toast.success('Welcome to Elite Merchant Portal');
-      router.push('/');
-    } catch (err: any) {
-      toast.error(err.message || 'Google Authentication failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4 relative overflow-hidden">
-      {/* Decorative ambient blobs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-      
-      <div className="w-full max-w-sm space-y-8 relative z-10">
-        <div className="text-center space-y-2">
-          <div className="inline-block px-3 py-1 bg-blue-50 rounded-full mb-2">
-             <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Secure Access</span>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
+      <div className={`w-full transition-all duration-500 ease-in-out ${mode === 'register' ? 'max-w-[480px]' : 'max-w-[420px]'} space-y-10`}>
+        {/* Brand Header */}
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="h-12 w-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+               <span className="text-white font-black text-xl italic">M</span>
+            </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tighter text-slate-900 uppercase">MoneyManager</h1>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] opacity-60 italic">Merchant Operations Protocol</p>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-slate-900 leading-none">
+                {mode === 'login' ? 'Welcome back' : 'Start your journey'}
+              </h1>
+              <p className="text-base text-slate-500 font-medium px-2 leading-relaxed">
+                {mode === 'login' 
+                  ? 'Sign in to access your merchant dashboard' 
+                  : 'Join thousands of merchants managing their business smarter'}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <Card className="p-8 bg-white/80 backdrop-blur-xl border border-white shadow-2xl rounded-[2.5rem]">
-          <div className="space-y-8 flex flex-col items-center">
-            <div className="text-center">
-               <p className="text-sm font-bold text-slate-900">Elite Portal Entry</p>
-               <p className="text-[10px] font-medium text-slate-400 mt-1 uppercase tracking-widest">Authentication required to proceed</p>
-            </div>
-
-            <form onSubmit={handleLegacyLogin} className="w-full space-y-4">
+        <Card className={`p-10 border-slate-200 shadow-xl shadow-slate-200/40 rounded-3xl border bg-white transition-all duration-300 ${mode === 'register' ? 'space-y-6' : 'space-y-8'}`}>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {mode === 'register' && (
+              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                <Input
+                  label="Full Name"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="rounded-xl border-slate-200 h-11"
+                />
+                <Input
+                  label="Username"
+                  placeholder="johndoe"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="rounded-xl border-slate-200 h-11"
+                />
+              </div>
+            )}
+            
+            <Input
+              label="Email Address"
+              type="email"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="rounded-xl border-slate-200 h-11"
+            />
+            
+            <div className="relative">
               <Input
-                label="Professional Email"
-                type="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <Input
-                label="Confidential Password"
-                type="password"
+                label="Password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="rounded-xl border-slate-200 h-11"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 bottom-3 text-slate-400 hover:text-slate-600 transition-colors"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {mode === 'register' && (
+              <div className="animate-in fade-in slide-in-from-top-4 duration-500 delay-150">
+                <Input
+                  label="Confirm Password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="rounded-xl border-slate-200 h-11"
+                  error={password !== confirmPassword && confirmPassword !== '' ? "Passwords do not match" : undefined}
+                />
+              </div>
+            )}
+
+            <div className="pt-4 flex justify-center">
               <Button 
                 type="submit" 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-2xl transition-all"
+                className={`${mode === 'login' ? 'w-full' : 'px-12'} h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md shadow-blue-50 active:scale-[0.99] transition-all text-sm`}
                 isLoading={isLoading}
               >
-                Execute Login
+                {mode === 'login' ? 'Sign In' : 'Get Started'}
               </Button>
-            </form>
-
-            <div className="w-full flex items-center gap-4 opacity-20">
-               <div className="h-px bg-slate-300 flex-1" />
-               <span className="text-[8px] font-black uppercase tracking-widest">OR</span>
-               <div className="h-px bg-slate-300 flex-1" />
             </div>
+          </form>
 
-            <div className="w-full flex flex-col items-center gap-4">
-               <div className="w-full transition-all hover:scale-[1.02] active:scale-[0.98]">
-                  {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.includes('placeholder') ? (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-center">
-                      <p className="text-[10px] font-bold text-amber-800 uppercase tracking-tight">G-Sync Offline</p>
-                    </div>
-                  ) : (
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => toast.error('Google Authentication failed')}
-                      useOneTap={false}
-                      shape="pill"
-                      theme="filled_blue"
-                      width="320"
-                      text="signin_with"
-                    />
-                  )}
-               </div>
-               
-               <button 
-                 onClick={() => router.push('/register')}
-                 className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
-               >
-                 Create New Entity Access
-               </button>
-            </div>
+          <div className="pt-4 text-center border-t border-slate-50">
+             <button 
+               onClick={() => {
+                 setMode(mode === 'login' ? 'register' : 'login');
+                 // Reset registration fields only if switching away
+                 if (mode === 'login') {
+                    setName('');
+                    setUsername('');
+                    setConfirmPassword('');
+                 }
+               }}
+               className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+             >
+               {mode === 'login' ? (
+                 <>New here? <span className="text-blue-600">Create an account</span></>
+               ) : (
+                 <>Already have an account? <span className="text-blue-600">Sign In</span></>
+               )}
+             </button>
           </div>
         </Card>
 
-        <div className="text-center">
-           <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-300">
-             © 2026 Antigravity Global Logic • v2.8.1-Stable
-           </p>
+        {/* Footer Links */}
+        <div className="text-center space-y-6 pt-2 pb-10">
+          <p className="text-sm text-slate-400 font-medium leading-relaxed">
+            Protecting your business assets with <br/>
+            <span className="text-slate-600 font-bold hover:underline cursor-pointer">MoneyManager Security</span>.
+          </p>
+          <div className="h-px bg-slate-100 w-16 mx-auto" />
+          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest leading-none">
+            Secure Infrastructure & Encryption
+          </p>
         </div>
       </div>
     </div>
