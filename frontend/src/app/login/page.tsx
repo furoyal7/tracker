@@ -8,6 +8,7 @@ import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 import { Suspense } from 'react';
 
@@ -59,6 +60,22 @@ function LoginContent() {
       router.push('/');
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setIsLoading(true);
+    try {
+      const response: any = await api.post('/auth/google', {
+        idToken: credentialResponse.credential,
+      });
+      setAuth(response.data.user, response.data.token);
+      toast.success('Signed in successfully with Google!');
+      router.push('/');
+    } catch (err: any) {
+      toast.error(err.message || 'Google authentication failed');
     } finally {
       setIsLoading(false);
     }
@@ -167,6 +184,29 @@ function LoginContent() {
               </Button>
             </div>
           </form>
+
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-100"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center w-full">
+            <div className="w-full flex justify-center scale-110 transform transition-transform hover:scale-[1.12]">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error('Google Login Failed')}
+                theme="outline"
+                shape="pill"
+                size="large"
+                text={mode === 'login' ? 'signin_with' : 'signup_with'}
+                width="360"
+              />
+            </div>
+          </div>
 
           <div className="pt-4 text-center border-t border-slate-50">
              <button 

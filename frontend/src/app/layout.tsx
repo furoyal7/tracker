@@ -34,17 +34,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans transition-colors duration-300 bg-background text-foreground">
-        {isValidClientId ? (
-          <GoogleOAuthProvider clientId={googleClientId}>
-            {children}
-            <Toaster position="top-center" expand={true} richColors />
-          </GoogleOAuthProvider>
-        ) : (
-          <>
-            {children}
-            <Toaster position="top-center" expand={true} richColors />
-          </>
-        )}
+        <GoogleOAuthProvider clientId={googleClientId}>
+          {children}
+          <Toaster position="top-center" expand={true} richColors />
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
