@@ -195,7 +195,7 @@ function LoginContent() {
           </div>
 
           <div className="flex justify-center w-full">
-            <div className="w-full flex justify-center scale-110 transform transition-transform hover:scale-[1.12]">
+            <div className="w-full flex justify-center transition-transform duration-300 hover:scale-105">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => toast.error('Google Login Failed')}
@@ -203,7 +203,6 @@ function LoginContent() {
                 shape="pill"
                 size="large"
                 text="continue_with"
-                width="360"
               />
             </div>
           </div>
