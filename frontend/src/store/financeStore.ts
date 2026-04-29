@@ -9,9 +9,9 @@ interface FinanceState {
   isLoading: boolean;
   error: string | null;
 
-  fetchSummary: () => Promise<void>;
-  fetchTransactions: (params?: { startDate?: string, endDate?: string, type?: string, category?: string }) => Promise<void>;
-  fetchDebts: () => Promise<void>;
+  fetchSummary: (background?: boolean) => Promise<void>;
+  fetchTransactions: (params?: { startDate?: string, endDate?: string, type?: string, category?: string }, background?: boolean) => Promise<void>;
+  fetchDebts: (background?: boolean) => Promise<void>;
   addTransaction: (data: Partial<Transaction>) => Promise<void>;
   addDebt: (data: Partial<Debt>) => Promise<void>;
   addPayment: (debtId: string, amount: number) => Promise<void>;
@@ -24,8 +24,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchSummary: async () => {
-    set({ isLoading: true });
+  fetchSummary: async (background = false) => {
+    if (!background) set({ isLoading: true });
     try {
       const summary = await api.get('/reports/summary');
       set({ summary: summary.data, isLoading: false });
@@ -34,8 +34,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     }
   },
 
-  fetchTransactions: async (params?: { startDate?: string, endDate?: string, type?: string, category?: string }) => {
-    set({ isLoading: true });
+  fetchTransactions: async (params, background = false) => {
+    if (!background) set({ isLoading: true });
     try {
       const response = await api.get('/transactions', { params });
       set({ transactions: response.data.transactions, isLoading: false });
@@ -44,8 +44,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     }
   },
 
-  fetchDebts: async () => {
-    set({ isLoading: true });
+  fetchDebts: async (background = false) => {
+    if (!background) set({ isLoading: true });
     try {
       const response = await api.get('/debts');
       set({ debts: response.data, isLoading: false });
@@ -58,8 +58,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/transactions', data);
-      await get().fetchTransactions();
-      await get().fetchSummary();
+      Promise.all([
+        get().fetchTransactions(undefined, true),
+        get().fetchSummary(true)
+      ]);
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }
@@ -69,8 +72,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/debts', data);
-      await get().fetchDebts();
-      await get().fetchSummary();
+      Promise.all([
+        get().fetchDebts(true),
+        get().fetchSummary(true)
+      ]);
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }
@@ -80,8 +86,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/payments', { debtId, amount });
-      await get().fetchDebts();
-      await get().fetchSummary();
+      Promise.all([
+        get().fetchDebts(true),
+        get().fetchSummary(true)
+      ]);
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }

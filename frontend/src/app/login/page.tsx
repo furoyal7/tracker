@@ -202,7 +202,7 @@ function LoginContent() {
                 theme="outline"
                 shape="pill"
                 size="large"
-                text={mode === 'login' ? 'signin_with' : 'signup_with'}
+                text="continue_with"
                 width="360"
               />
             </div>

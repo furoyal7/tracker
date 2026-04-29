@@ -6,7 +6,7 @@ interface InventoryState {
   products: Product[];
   isLoading: boolean;
   error: string | null;
-  fetchProducts: () => Promise<void>;
+  fetchProducts: (background?: boolean) => Promise<void>;
   addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => Promise<void>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
@@ -17,8 +17,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchProducts: async () => {
-    set({ isLoading: true });
+  fetchProducts: async (background = false) => {
+    if (!background) set({ isLoading: true });
     try {
       const response: any = await api.get('/products');
       set({ products: response.data || [], isLoading: false });
@@ -32,7 +32,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/products', productData);
-      await get().fetchProducts();
+      get().fetchProducts(true);
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }
@@ -42,7 +43,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.put(`/products/${id}`, productData);
-      await get().fetchProducts();
+      get().fetchProducts(true);
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }
@@ -52,7 +54,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.delete(`/products/${id}`);
-      await get().fetchProducts();
+      get().fetchProducts(true);
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }
