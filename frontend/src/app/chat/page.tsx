@@ -6,26 +6,84 @@ import { ChevronLeft, Plus, Search, MoreVertical } from 'lucide-react';
 import ChatList from '@/components/chat/ChatList';
 import api from '@/services/api';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
+import { socketService } from '@/services/socket/socket';
 
 export default function ChatListPage() {
-  const [conversations, setConversations] = useState([]);
+  const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [newParticipant, setNewParticipant] = useState('');
+  const [foundUser, setFoundUser] = useState<any>(null);
+  const [searching, setSearching] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const router = useRouter();
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const data = await api.get('/chat/conversations') as any;
-        setConversations(data);
-      } catch (error: any) {
-        toast.error('Failed to load conversations');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Connect socket to receive real-time updates for the list
+    if (user?.id) {
+      const socket = socketService.connect(user.id);
+      socket.on('receive_message', () => {
+        // Refresh list when new messages arrive
+        fetchConversations();
+      });
+    }
+  }, [user]);
 
+  const fetchConversations = async () => {
+    try {
+      const data = await api.get('/chat/conversations') as any;
+      setConversations(data);
+    } catch (error: any) {
+      toast.error('Failed to load conversations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchConversations();
   }, []);
+
+  const handleSearchUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newParticipant.trim()) return;
+
+    setSearching(true);
+    setFoundUser(null);
+    try {
+      const response: any = await api.get(`/users/search?username=${newParticipant.trim()}`);
+      // successResponse returns { success: true, message: "...", data: user }
+      if (response.success) {
+        setFoundUser(response.data);
+      }
+    } catch (error: any) {
+      toast.error('User not found');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleCreateChat = async () => {
+    if (!foundUser) return;
+
+    setCreating(true);
+    try {
+      const chat = await api.post('/chat/conversations', { 
+        participantId: foundUser.id 
+      }) as any;
+      setNewParticipant('');
+      setFoundUser(null);
+      setShowNewChat(false);
+      router.push(`/chat/${chat.id}`);
+    } catch (error) {
+      toast.error('Failed to create conversation');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen bg-white max-w-md mx-auto shadow-xl relative overflow-hidden">
@@ -81,9 +139,73 @@ export default function ChatListPage() {
       </div>
 
       {/* Floating Action Button for New Chat */}
-      <button className="absolute bottom-24 right-6 w-14 h-14 bg-[#25d366] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-[#128c7e] transition-all active:scale-95 z-30 group">
+      <button 
+        onClick={() => setShowNewChat(true)}
+        className="absolute bottom-24 right-6 w-14 h-14 bg-[#25d366] text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-[#128c7e] transition-all active:scale-95 z-30 group"
+      >
         <Plus className="w-7 h-7 group-hover:rotate-90 transition-transform duration-300" />
       </button>
+
+      {/* New Chat Modal */}
+      {showNewChat && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center animate-in fade-in duration-300">
+          <div className="w-full bg-white rounded-t-3xl p-6 pb-12 shadow-2xl animate-in slide-in-from-bottom duration-500">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">New Conversation</h3>
+              <button onClick={() => setShowNewChat(false)} className="text-gray-400 hover:text-gray-600 font-medium">Cancel</button>
+            </div>
+            
+            <form onSubmit={handleSearchUser}>
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Search Username</label>
+                <div className="flex gap-2">
+                  <input 
+                    autoFocus
+                    type="text" 
+                    value={newParticipant}
+                    onChange={(e) => {
+                      setNewParticipant(e.target.value);
+                      setFoundUser(null);
+                    }}
+                    placeholder="Enter username" 
+                    className="flex-1 bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-lg focus:border-[#25d366] transition-all outline-none"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={searching || !newParticipant.trim()}
+                    className="px-6 bg-[#075e54] text-white rounded-2xl font-bold disabled:opacity-50 active:scale-95 transition-all"
+                  >
+                    {searching ? '...' : <Search className="w-6 h-6" />}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {foundUser && (
+              <div className="mb-8 p-4 bg-gray-50 rounded-2xl flex items-center gap-4 animate-in zoom-in-95 duration-300">
+                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl overflow-hidden">
+                  {foundUser.avatarUrl ? (
+                    <img src={foundUser.avatarUrl} alt={foundUser.username} className="w-full h-full object-cover" />
+                  ) : (
+                    foundUser.username[0].toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-gray-900">{foundUser.name || foundUser.username}</h4>
+                  <p className="text-xs text-gray-500">@{foundUser.username}</p>
+                </div>
+                <button 
+                  onClick={handleCreateChat}
+                  disabled={creating}
+                  className="bg-[#25d366] text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg shadow-[#25d366]/20 active:scale-95 transition-all"
+                >
+                  {creating ? '...' : 'Chat'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Premium Tab Bar */}
       <div className="border-t border-gray-100 p-2 flex justify-around bg-gray-50/80 backdrop-blur-md pb-safe">

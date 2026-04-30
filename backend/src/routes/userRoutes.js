@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/profile', userController.getProfile);
+router.get('/search', userController.searchUser);
 router.patch('/profile', userController.updateProfile);
 router.post('/avatar', upload.single('avatar'), userController.uploadAvatar);
 

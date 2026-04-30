@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import helmet from 'helmet';
+import compression from 'compression';
 import 'express-async-errors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,13 +16,19 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middlewares
+app.use(helmet({
+  crossOriginResourcePolicy: false, // Allow images from other domains if needed
+}));
+app.use(compression());
 app.use(cors({
-  origin: config.frontendUrl === '*' 
-    ? true 
-    : config.frontendUrl.split(',').map(url => url.trim()),
+  origin: config.nodeEnv === 'development' ? true : (
+    config.frontendUrl === '*' 
+      ? true 
+      : config.frontendUrl.split(',').map(url => url.trim())
+  ),
   credentials: true
 }));
-app.use(morgan('dev'));
+app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));

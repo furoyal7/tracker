@@ -58,7 +58,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/transactions', data);
-      Promise.all([
+      // Wait for background refreshes to ensure state is consistent
+      await Promise.all([
         get().fetchTransactions(undefined, true),
         get().fetchSummary(true)
       ]);
@@ -72,7 +73,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/debts', data);
-      Promise.all([
+      await Promise.all([
         get().fetchDebts(true),
         get().fetchSummary(true)
       ]);
@@ -86,7 +87,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/payments', { debtId, amount });
-      Promise.all([
+      await Promise.all([
         get().fetchDebts(true),
         get().fetchSummary(true)
       ]);

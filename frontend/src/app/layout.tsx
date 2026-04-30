@@ -36,7 +36,15 @@ export default function RootLayout({
       <body className="min-h-full font-sans transition-colors duration-300 bg-background text-foreground">
         <GoogleOAuthProvider clientId={googleClientId}>
           {children}
-          <Toaster position="top-center" expand={true} richColors />
+          <Toaster 
+            position="top-center" 
+            expand={false} 
+            richColors 
+            closeButton
+            toastOptions={{
+              className: 'rounded-3xl border-none shadow-2xl font-sans',
+            }}
+          />
         </GoogleOAuthProvider>
       </body>
     </html>

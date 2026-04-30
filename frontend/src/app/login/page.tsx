@@ -19,14 +19,19 @@ function LoginContent() {
   
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Use for email or username
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { setAuth, isAuthenticated, _hasHydrated } = useAuthStore();
+
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   useEffect(() => {
     const requestedMode = searchParams.get('mode');
@@ -46,8 +51,10 @@ function LoginContent() {
     
     const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
     const payload = mode === 'login' 
-      ? { email, password } 
-      : { email, password, name, username };
+      ? { email: identifier.includes('@') ? identifier : undefined, 
+          username: identifier.includes('@') ? undefined : identifier, 
+          password } 
+      : { username, password };
 
     const successMsg = mode === 'login' 
       ? 'Welcome back! You have successfully signed in.' 
@@ -82,6 +89,10 @@ function LoginContent() {
   };
 
 
+  if (!_hasHydrated || isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
       <div className={`w-full transition-all duration-500 ease-in-out ${mode === 'register' ? 'max-w-[480px]' : 'max-w-[420px]'} space-y-10`}>
@@ -109,18 +120,10 @@ function LoginContent() {
         <Card className={`p-10 border-slate-200 shadow-xl shadow-slate-200/40 rounded-3xl border bg-white transition-all duration-300 ${mode === 'register' ? 'space-y-6' : 'space-y-8'}`}>
           <form onSubmit={handleSubmit} className="space-y-5">
             {mode === 'register' && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                <Input
-                  label="Full Name"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="rounded-xl border-slate-200 h-11"
-                />
+              <div className="animate-in fade-in slide-in-from-top-4 duration-500">
                 <Input
                   label="Username"
-                  placeholder="johndoe"
+                  placeholder="Choose a unique username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -129,15 +132,16 @@ function LoginContent() {
               </div>
             )}
             
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="name@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="rounded-xl border-slate-200 h-11"
-            />
+            {mode === 'login' && (
+              <Input
+                label="Username or Email"
+                placeholder="Enter your username or email"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                required
+                className="rounded-xl border-slate-200 h-11"
+              />
+            )}
             
             <div className="relative">
               <Input
@@ -213,7 +217,6 @@ function LoginContent() {
                  setMode(mode === 'login' ? 'register' : 'login');
                  // Reset registration fields only if switching away
                  if (mode === 'login') {
-                    setName('');
                     setUsername('');
                     setConfirmPassword('');
                  }

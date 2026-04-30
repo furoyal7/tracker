@@ -6,7 +6,11 @@ export const getConversations = async (req, res) => {
     const conversations = await chatService.getConversations(merchantId);
     res.json(conversations);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error in getConversations:', error);
+    res.status(500).json({ 
+      message: error.message, 
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    });
   }
 };
 
@@ -22,12 +26,28 @@ export const getMessages = async (req, res) => {
 
 export const createConversation = async (req, res) => {
   try {
-    const merchantId = req.user.id;
-    const { participantName } = req.body;
-    if (!participantName) {
-      return res.status(400).json({ message: 'participantName is required' });
+    const creatorId = req.user.id;
+    const { participantId } = req.body;
+    if (!participantId) {
+      return res.status(400).json({ message: 'participantId is required' });
     }
-    const conversation = await chatService.createConversation(merchantId, participantName);
+    if (creatorId === participantId) {
+      return res.status(400).json({ message: 'Cannot chat with yourself' });
+    }
+    const conversation = await chatService.createConversation(creatorId, participantId);
+    res.json(conversation);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation = await chatService.getConversation(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
     res.json(conversation);
   } catch (error) {
     res.status(500).json({ message: error.message });

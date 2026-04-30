@@ -33,3 +33,19 @@ export const uploadAvatar = async (req, res) => {
     return errorResponse(res, error.message, 400);
   }
 };
+
+export const searchUser = async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) {
+      return errorResponse(res, 'Username is required', 400);
+    }
+    const user = await userService.findByUsername(username);
+    if (!user) {
+      return errorResponse(res, 'User not found', 404);
+    }
+    return successResponse(res, user, 'User found');
+  } catch (error) {
+    return errorResponse(res, error.message, 400);
+  }
+};

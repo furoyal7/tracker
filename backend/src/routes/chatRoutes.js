@@ -7,6 +7,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/conversations', chatController.getConversations);
+router.get('/conversations/:conversationId', chatController.getConversation);
 router.get('/messages/:conversationId', chatController.getMessages);
 router.post('/conversations', chatController.createConversation);
 

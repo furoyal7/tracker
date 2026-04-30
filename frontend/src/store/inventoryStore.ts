@@ -32,7 +32,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.post('/products', productData);
-      get().fetchProducts(true);
+      await get().fetchProducts(true);
       set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
@@ -43,7 +43,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.put(`/products/${id}`, productData);
-      get().fetchProducts(true);
+      await get().fetchProducts(true);
       set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
@@ -54,7 +54,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     set({ isLoading: true });
     try {
       await api.delete(`/products/${id}`);
-      get().fetchProducts(true);
+      await get().fetchProducts(true);
       set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });

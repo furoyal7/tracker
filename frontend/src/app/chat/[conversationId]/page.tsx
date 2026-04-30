@@ -6,18 +6,14 @@ import ChatScreen from '@/components/chat/ChatScreen';
 import { useChat } from '@/hooks/useChat';
 import api from '@/services/api';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ChatRoomPage() {
   const { conversationId } = useParams();
   const [participantName, setParticipantName] = useState('Chat');
-  const [currentUserId, setCurrentUserId] = useState('');
   const [loading, setLoading] = useState(true);
-
-  // Mocking userId for demonstration if not found
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    setCurrentUserId(user.id || 'user-' + Math.random().toString(36).substr(2, 9));
-  }, []);
+  const { user } = useAuthStore();
+  const currentUserId = user?.id || '';
 
   const { messages, setMessages, sendMessage } = useChat(
     conversationId as string,
@@ -30,11 +26,11 @@ export default function ChatRoomPage() {
         const history = await api.get(`/chat/messages/${conversationId}`) as any;
         setMessages(history);
         
-        // Also fetch conversation details to get participant name
-        const conversations = await api.get('/chat/conversations') as any;
-        const currentChat = conversations.find((c: any) => c.id === conversationId);
-        if (currentChat) {
-          setParticipantName(currentChat.participantName);
+        // Fetch conversation details to get participant name
+        const chat = await api.get(`/chat/conversations/${conversationId}`) as any;
+        if (chat) {
+          const otherUser = chat.creatorId === currentUserId ? chat.participant : chat.creator;
+          setParticipantName(otherUser.name || otherUser.username);
         }
       } catch (error) {
         toast.error('Failed to load chat history');

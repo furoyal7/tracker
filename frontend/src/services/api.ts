@@ -40,12 +40,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || 'Something went wrong';
+    const message = error.response?.data?.message || error.message || 'Something went wrong';
     
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Error:', {
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+    }
+
     if (error.response?.status === 401) {
       // Handle unauthorized (e.g., redirect to login)
       localStorage.removeItem('token');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      if (typeof window !== 'undefined' && !['/login', '/register'].includes(window.location.pathname)) {
         window.location.href = '/login';
       }
     }

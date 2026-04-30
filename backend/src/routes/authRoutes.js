@@ -8,16 +8,17 @@ const router = express.Router();
 
 const registerSchema = z.object({
   body: z.object({
-    email: z.string().email(),
+    email: z.string().email().optional(),
     password: z.string().min(6),
-    name: z.string().min(2),
+    name: z.string().min(2).optional(),
     username: z.string().min(3),
   }),
 });
 
 const loginSchema = z.object({
   body: z.object({
-    email: z.string().email(),
+    email: z.string().email().optional(),
+    username: z.string().min(3).optional(),
     password: z.string(),
   }),
 });

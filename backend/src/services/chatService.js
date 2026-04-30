@@ -1,10 +1,21 @@
 import prisma from '../lib/prisma.js';
 
 class ChatService {
-  async getConversations(merchantId) {
+  async getConversations(userId) {
     return await prisma.conversation.findMany({
-      where: { merchantId },
+      where: {
+        OR: [
+          { creatorId: userId },
+          { participantId: userId }
+        ]
+      },
       include: {
+        creator: {
+          select: { id: true, username: true, name: true, avatarUrl: true }
+        },
+        participant: {
+          select: { id: true, username: true, name: true, avatarUrl: true }
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1
@@ -21,14 +32,25 @@ class ChatService {
     });
   }
 
-  async createConversation(merchantId, participantName) {
-    let conversation = await prisma.conversation.findFirst({
-      where: { merchantId, participantName }
+  async createConversation(creatorId, participantId) {
+    // Ensure small ID comes first to keep it unique regardless of who starts
+    const [id1, id2] = [creatorId, participantId].sort();
+
+    let conversation = await prisma.conversation.findUnique({
+      where: {
+        creatorId_participantId: {
+          creatorId: id1,
+          participantId: id2
+        }
+      }
     });
 
     if (!conversation) {
       conversation = await prisma.conversation.create({
-        data: { merchantId, participantName }
+        data: {
+          creatorId: id1,
+          participantId: id2
+        }
       });
     }
 
@@ -47,6 +69,24 @@ class ChatService {
     });
 
     return message;
+  }
+
+  async getConversation(id) {
+    return await prisma.conversation.findUnique({
+      where: { id },
+      include: {
+        creator: {
+          select: { id: true, username: true, name: true, avatarUrl: true }
+        },
+        participant: {
+          select: { id: true, username: true, name: true, avatarUrl: true }
+        },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      }
+    });
   }
 }
 

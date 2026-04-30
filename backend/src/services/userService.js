@@ -53,3 +53,15 @@ export const updateProfile = async (userId, profileData) => {
     }
   });
 };
+
+export const findByUsername = async (username) => {
+  return prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      avatarUrl: true
+    }
+  });
+};

@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import chatService from '../services/chatService.js';
+import prisma from '../lib/prisma.js';
 import { config } from '../config/env.js';
 
 const initSocket = (server) => {
@@ -20,6 +21,8 @@ const initSocket = (server) => {
     const userId = socket.handshake.auth.userId;
     if (userId) {
       socket.userId = userId;
+      socket.join(userId); // Join personal room for global notifications
+      console.log(`User ${userId} joined their personal room`);
     }
 
     socket.on('join_conversation', (conversationId) => {
@@ -30,8 +33,27 @@ const initSocket = (server) => {
     socket.on('send_message', async ({ conversationId, senderId, text }) => {
       try {
         const message = await chatService.saveMessage(conversationId, senderId, text);
-        // Broadcast to everyone in the room
-        io.to(conversationId).emit('receive_message', message);
+        
+        // Fetch sender info for better notification
+        const sender = await prisma.user.findUnique({
+          where: { id: senderId },
+          select: { username: true, name: true, avatarUrl: true }
+        });
+
+        // Broadcast to the specific conversation room
+        const messageWithSender = {
+          ...message,
+          senderName: sender?.name || sender?.username || 'Someone'
+        };
+
+        io.to(conversationId).emit('receive_message', messageWithSender);
+
+        // Also notify the recipient globally if they aren't in the room
+        const conversation = await chatService.getConversation(conversationId);
+        if (conversation) {
+          const recipientId = conversation.creatorId === senderId ? conversation.participantId : conversation.creatorId;
+          io.to(recipientId).emit('receive_message', messageWithSender);
+        }
       } catch (error) {
         console.error('Error saving message:', error);
       }

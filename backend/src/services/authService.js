@@ -7,19 +7,30 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const register = async (userData) => {
   const { email, password, name, username } = userData;
+  
+  // If email is missing, use username as email (Prisma requires a unique email currently)
+  const finalEmail = email || `${username}@money.manager`;
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+  const existingUser = await prisma.user.findFirst({ 
+    where: { 
+      OR: [
+        { email: finalEmail },
+        { username: username }
+      ]
+    } 
+  });
+  
   if (existingUser) {
-    throw new Error('User already exists');
+    throw new Error('User with this username or email already exists');
   }
 
   const hashedPassword = password ? await hashPassword(password) : null;
 
   const user = await prisma.user.create({
     data: {
-      email,
+      email: finalEmail,
       password: hashedPassword,
-      name,
+      name: name || username,
       username,
     },
   });
@@ -43,11 +54,20 @@ export const register = async (userData) => {
 };
 
 export const login = async (credentials) => {
-  const { email, password } = credentials;
+  const { email, password, username } = credentials;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  // Find user by email OR username
+  const user = await prisma.user.findFirst({ 
+    where: { 
+      OR: [
+        { email: email || 'never-match' },
+        { username: username || 'never-match' }
+      ]
+    } 
+  });
+
   if (!user || (user.password && !password)) {
-    throw new Error('Invalid email or password');
+    throw new Error('Invalid credentials');
   }
 
   if (user.password) {
