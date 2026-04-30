@@ -5,7 +5,11 @@ if (!API_URL && typeof window !== 'undefined' && window.location.hostname === 'l
   console.warn('NEXT_PUBLIC_API_URL is missing, falling back to localhost for development.');
 }
 
-const finalApiUrl = API_URL || 'http://localhost:5000/api';
+let finalApiUrl = API_URL || 'http://localhost:5000/api';
+
+if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && finalApiUrl.includes('localhost')) {
+  console.error('CRITICAL: API is pointing to localhost but app is running in production. Please set NEXT_PUBLIC_API_URL in your deployment environment.');
+}
 
 export const getServerUrl = () => {
   return finalApiUrl.replace('/api', '');

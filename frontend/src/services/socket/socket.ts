@@ -1,6 +1,10 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
+let SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && SOCKET_URL.includes('localhost')) {
+  console.error('CRITICAL: Socket is pointing to localhost but app is running in production.');
+}
 
 class SocketService {
   private socket: Socket | null = null;

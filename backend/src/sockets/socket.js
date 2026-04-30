@@ -5,8 +5,11 @@ import { config } from '../config/env.js';
 const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: config.frontendUrl,
-      methods: ["GET", "POST"]
+      origin: config.frontendUrl === '*' 
+        ? true 
+        : config.frontendUrl.split(',').map(url => url.trim()),
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
 

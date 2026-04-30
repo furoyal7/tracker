@@ -15,7 +15,9 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: config.frontendUrl === '*' 
+    ? true 
+    : config.frontendUrl.split(',').map(url => url.trim()),
   credentials: true
 }));
 app.use(morgan('dev'));
