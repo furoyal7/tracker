@@ -25,6 +25,9 @@ export interface Transaction {
   userId: string;
   productId?: string;
   quantity?: number;
+  paymentMethod?: string;
+  partyName?: string;
+  reference?: string;
 }
 
 export interface Product {
@@ -112,6 +115,7 @@ export interface FinancialSummary {
   totalIncome: number;
   totalExpense: number;
   profit: number;
+  profitMargin: number;
   totalReceivable: number;
   totalPayable: number;
   trends: {
@@ -126,5 +130,8 @@ export interface FinancialSummary {
     expense: number;
   }[];
   insights: string[];
+  incomeDistribution: { label: string; value: number; amount: number }[];
+  expenseDistribution: { label: string; value: number; amount: number }[];
+  topSellingProducts: { id: string; name: string; quantity: number; revenue: number }[];
 }
 

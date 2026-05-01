@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Search, X, ArrowUpRight, ArrowDownRight, Package, Hash, Filter, Calendar, RotateCcw } from 'lucide-react';
+import { Plus, Search, X, ArrowUpRight, ArrowDownRight, Package, Hash, Filter, Calendar, RotateCcw, CreditCard, Wallet, Banknote, User, ReceiptText, Tag } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -9,6 +9,7 @@ import { useFinanceStore } from '@/store/financeStore';
 import { useInventoryStore } from '@/store/inventoryStore';
 import { cn } from '@/utils/cn';
 import { Transaction } from '@/types';
+import { toast } from 'sonner';
 
 function TransactionsContent() {
   const { transactions, isLoading, fetchTransactions, addTransaction } = useFinanceStore();
@@ -29,12 +30,15 @@ function TransactionsContent() {
   const [note, setNote] = useState('');
   const [productId, setProductId] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [partyName, setPartyName] = useState('');
+  const [reference, setReference] = useState('');
 
+  // Auto-open form if type is provided in URL
   useEffect(() => {
     fetchTransactions();
     fetchProducts();
     
-    // Auto-open form if type is provided in URL
     const typeParam = searchParams.get('type');
     if (typeParam === 'INCOME' || typeParam === 'EXPENSE') {
       setType(typeParam);
@@ -55,18 +59,70 @@ function TransactionsContent() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await addTransaction({
-      type,
-      amount: parseFloat(amount),
-      category,
-      note,
-      productId: productId || undefined,
-      quantity: productId ? parseInt(quantity) : undefined,
-      date: new Date().toISOString(),
-    });
-    setIsAdding(false);
-    resetForm();
+    // NUCLEAR PREVENTION OF REDIRECTS
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.nativeEvent) {
+        e.nativeEvent.stopImmediatePropagation();
+        e.nativeEvent.preventDefault();
+      }
+    }
+    
+    console.log('[TRACE] Form Submission Started - REDIRECTS BLOCKED');
+    
+    if (isLoading) {
+      console.log('[TRACE] Submission blocked: Already loading');
+      return;
+    }
+
+    const numericAmount = parseFloat(amount);
+    if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
+      toast.error('Please enter a valid positive amount');
+      return;
+    }
+
+    try {
+      // 1. Mandatory Field Validation
+      if (type === 'INCOME' && !partyName) {
+        toast.error('Customer name is required for sales tracking');
+        return;
+      }
+
+      if ((paymentMethod === 'BANK' || paymentMethod === 'CARD') && !reference) {
+        toast.error(`Reference number is required for ${paymentMethod.toLowerCase()} payments`);
+        return;
+      }
+
+      if (!category) {
+        toast.error('Please select or enter a category');
+        return;
+      }
+
+      const payload = {
+        type,
+        amount: numericAmount,
+        category: category || (type === 'INCOME' ? 'Sale' : 'Expense'),
+        note: note || undefined,
+        productId: productId || undefined,
+        quantity: productId ? parseInt(quantity) : undefined,
+        paymentMethod,
+        partyName: partyName || undefined,
+        reference: reference || undefined,
+        date: new Date().toISOString(),
+      };
+      
+      console.log('[TRACE] Sending Payload:', payload);
+      const result = await addTransaction(payload);
+      
+      console.log('[TRACE] Success Response Received:', result);
+      setIsAdding(false);
+      resetForm();
+      toast.success(`${type === 'INCOME' ? 'Sale' : 'Expense'} recorded successfully`);
+    } catch (err: any) {
+      console.error('[TRACE] Submission Failed:', err);
+      toast.error(err.message || 'Failed to record entry');
+    }
   };
 
   const resetForm = () => {
@@ -75,6 +131,9 @@ function TransactionsContent() {
     setNote('');
     setProductId('');
     setQuantity('1');
+    setPaymentMethod('CASH');
+    setPartyName('');
+    setReference('');
   };
 
   // Sync amount with selected product if it's an Income/Sale
@@ -110,21 +169,29 @@ function TransactionsContent() {
 
   const filteredTransactions = (transactions || []).filter((t: Transaction) => 
     t.category.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    t.note?.toLowerCase().includes(searchQuery.toLowerCase())
+    t.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.partyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    t.reference?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const paymentMethods = [
+    { id: 'CASH', label: 'Cash', icon: Wallet, color: 'bg-orange-50 text-orange-600' },
+    { id: 'BANK', label: 'Bank', icon: Banknote, color: 'bg-blue-50 text-blue-600' },
+    { id: 'CARD', label: 'Card', icon: CreditCard, color: 'bg-purple-50 text-purple-600' },
+  ];
 
   return (
     <MainLayout>
-      <div className="flex flex-col space-y-6">
+      <div className="flex flex-col space-y-4 pb-24">
         
         {/* 🔍 Search & Filter Actions */}
         <div className="flex space-x-2">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search history..."
-                className="w-full bg-white border border-slate-100 shadow-sm rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none"
+                placeholder="Search records..."
+                className="w-full bg-white border border-slate-100 shadow-sm rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -132,115 +199,107 @@ function TransactionsContent() {
             <button 
               onClick={() => setIsFiltering(!isFiltering)}
               className={cn(
-                "p-3.5 rounded-2xl border transition-all active:scale-95",
+                "p-2.5 rounded-xl border transition-all active:scale-95",
                 isFiltering || startDate || endDate
-                  ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" 
+                  ? "bg-slate-900 text-white border-slate-900 shadow-lg" 
                   : "bg-white text-slate-400 border-slate-100 shadow-sm"
               )}
             >
-               <Filter size={20} />
+               <Filter size={16} />
             </button>
         </div>
 
-        {/* 📅 Date Filter Drawer/Section */}
+        {/* 📅 Date Filter */}
         {isFiltering && (
-           <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-6 space-y-5 animate-in slide-in-from-top-4 duration-300">
-              <div className="flex items-center space-x-2 mb-2">
-                 <Calendar size={14} className="text-blue-600" />
-                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Custom Date Range</h4>
+           <div className="bg-white rounded-[1.5rem] border border-slate-50 shadow-sm p-4 space-y-3 animate-in slide-in-from-top-4 duration-300">
+              <div className="flex items-center space-x-2 mb-1">
+                 <div className="p-1.5 bg-blue-50 rounded-lg">
+                  <Calendar size={12} className="text-blue-600" />
+                 </div>
+                 <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-900">Custom Date Range</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">From Date</label>
+              <div className="grid grid-cols-2 gap-3">
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Start</label>
                     <input 
                       type="date" 
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full bg-slate-50 border-none rounded-xl p-3 text-[10px] font-bold outline-none"
+                      className="w-full bg-slate-50 border-none rounded-lg p-2.5 text-[9px] font-bold outline-none"
                     />
                  </div>
-                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">To Date</label>
+                 <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">End</label>
                     <input 
                       type="date" 
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full bg-slate-50 border-none rounded-xl p-3 text-[10px] font-bold outline-none"
+                      className="w-full bg-slate-50 border-none rounded-lg p-2.5 text-[9px] font-bold outline-none"
                     />
                  </div>
               </div>
-              <div className="flex space-x-2 pt-2">
-                <button 
-                  onClick={handleApplyFilter}
-                  className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-                >
-                  Apply Filter
-                </button>
-                <button 
-                  onClick={handleResetFilter}
-                  className="p-3 bg-slate-100 text-slate-500 rounded-xl active:scale-95 transition-all"
-                >
-                  <RotateCcw size={16} />
-                </button>
-              </div>
-           </div>
-        )}
-
-        {/* 🕒 Active Filter Chips */}
-        {(startDate || endDate) && !isFiltering && (
-           <div className="flex items-center space-x-2 animate-in fade-in duration-300">
-              <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full flex items-center">
-                 History: {startDate || '...'} to {endDate || 'Today'}
-                 <X size={10} className="ml-2 cursor-pointer" onClick={handleResetFilter} />
-              </span>
+              <button 
+                onClick={handleApplyFilter}
+                className="w-full py-2.5 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all"
+              >
+                Apply Filter
+              </button>
            </div>
         )}
 
         {/* 📜 Transaction List */}
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-2.5">
            {filteredTransactions.length === 0 && !isLoading ? (
              <div className="py-20 text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">No activity logs found</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300">No entries recorded</p>
              </div>
            ) : (
              filteredTransactions.map((t) => (
-                <div key={t.id} className="bg-white rounded-2xl border-b border-slate-50 p-3 flex flex-col space-y-2.5 transition-all active:bg-slate-50">
+                <div key={t.id} className="bg-white rounded-2xl border border-slate-50 p-3.5 flex flex-col space-y-2.5 shadow-sm active:bg-slate-50 transition-colors">
                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className={cn(
-                          "h-7 w-7 rounded-lg flex items-center justify-center",
+                          "h-8 w-8 rounded-lg flex items-center justify-center",
                           t.type === 'INCOME' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                         )}>
-                          {t.type === 'INCOME' ? <ArrowUpRight size={12} strokeWidth={3} /> : <ArrowDownRight size={12} strokeWidth={3} />}
+                          {t.type === 'INCOME' ? <ArrowUpRight size={14} strokeWidth={3} /> : <ArrowDownRight size={14} strokeWidth={3} />}
                         </div>
                         <div className="flex flex-col">
-                           <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight leading-none">{t.category}</h4>
-                           <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">
-                             {new Date(t.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                           </p>
+                           <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight leading-none">{t.partyName || t.category}</h4>
+                           <div className="flex items-center space-x-1.5 mt-1">
+                             <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
+                               {new Date(t.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                             </span>
+                             {t.paymentMethod && (
+                               <span className="text-[7px] font-black text-slate-200 uppercase tracking-widest">
+                                 | {t.paymentMethod}
+                               </span>
+                             )}
+                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                          <p className={cn(
-                           "text-xs font-black tabular-nums leading-none",
+                           "text-[13px] font-black tabular-nums leading-none",
                            t.type === 'INCOME' ? "text-emerald-600" : "text-rose-600"
                          )}>
                            {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
                          </p>
+                         {t.reference && (
+                           <p className="text-[6px] font-bold text-slate-300 uppercase tracking-widest mt-1">#{t.reference}</p>
+                         )}
                       </div>
                    </div>
                    
                    {(t.note || t.productId) && (
-                     <div className="flex items-center justify-between pl-10">
-                        {t.note && (
-                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight italic truncate max-w-[50%]">
-                            {t.note}
-                          </p>
-                        )}
+                     <div className="flex items-center justify-between pl-11 pt-2 border-t border-slate-50/50">
+                        <p className="text-[8px] font-medium text-slate-400 italic truncate max-w-[65%]">
+                          {t.note || t.category}
+                        </p>
                         {t.productId && (
-                          <div className="flex items-center space-x-1 text-blue-500/70 ml-auto">
+                          <div className="flex items-center space-x-1 text-blue-500/60">
                              <Package size={8} />
-                             <span className="text-[7px] font-black uppercase tracking-widest leading-none">{t.quantity} unit(s)</span>
+                             <span className="text-[7px] font-black uppercase tracking-widest">{t.quantity}qty</span>
                           </div>
                         )}
                      </div>
@@ -250,119 +309,182 @@ function TransactionsContent() {
            )}
         </div>
 
-        {/* ➕ FAB for New Transaction */}
+        {/* ➕ FAB */}
         {!isAdding && (
           <button 
             onClick={() => setIsAdding(true)}
-            className="fixed bottom-24 right-6 z-40 bg-blue-600 text-white p-5 rounded-full shadow-[0_8px_30px_rgb(37,99,235,0.4)] active:scale-90 transition-all outline-none border-none animate-in fade-in zoom-in duration-300"
+            className="fixed bottom-24 right-6 z-40 bg-slate-900 text-white p-3.5 rounded-2xl shadow-xl active:scale-90 transition-all border-none"
           >
-            <Plus size={32} strokeWidth={3} />
+            <Plus size={20} strokeWidth={3} />
           </button>
         )}
 
-        {/* 📝 New Transaction Sheet (Orders) */}
+        {/* 📝 New Transaction Sheet */}
         {isAdding && (
-          <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col justify-end">
-             <div className="bg-white rounded-t-[3rem] p-8 pb-12 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
-                <div className="flex items-center justify-between mb-8">
-                   <h2 className="text-lg font-black uppercase tracking-tight text-slate-900">Record Entry</h2>
-                   <button onClick={() => setIsAdding(false)} className="p-2 bg-slate-100 rounded-full text-slate-500">
-                      <X size={20} />
+          <div 
+            className="fixed inset-0 z-[10000] bg-slate-900/40 backdrop-blur-sm flex flex-col justify-end pointer-events-auto touch-none"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('[TRACE] Backdrop Clicked - Closing Sheet');
+              setIsAdding(false);
+            }}
+          >
+             <div 
+               className="bg-white rounded-t-[2.5rem] p-6 pb-12 animate-in slide-in-from-bottom duration-500 max-h-[90vh] overflow-y-auto no-scrollbar shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.1)] relative z-[10001]"
+               onClick={(e) => {
+                 e.stopPropagation(); // Stop click from hitting the backdrop
+               }}
+             >
+                <div className="flex items-center justify-between mb-6">
+                   <h2 className="text-sm font-black uppercase tracking-tight text-slate-900">Add Entry</h2>
+                   <button onClick={() => setIsAdding(false)} className="p-2 bg-slate-50 rounded-full text-slate-400">
+                      <X size={16} />
                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   {/* Type Selector */}
-                  <div className="flex items-center p-1.5 bg-slate-100 rounded-2xl w-full">
-                    <button
-                      type="button"
-                      onClick={() => setType('INCOME')}
-                      className={cn(
-                        "flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all",
-                        type === 'INCOME' ? "bg-white text-emerald-600 shadow-sm" : "text-slate-400"
-                      )}
-                    >
-                      Sale
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setType('EXPENSE')}
-                      className={cn(
-                        "flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all",
-                        type === 'EXPENSE' ? "bg-white text-rose-600 shadow-sm" : "text-slate-400"
-                      )}
-                    >
-                      Expense
-                    </button>
+                  <div className="flex items-center p-1 bg-slate-50 rounded-xl w-full">
+                    {['INCOME', 'EXPENSE'].map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setType(t as any)}
+                        className={cn(
+                          "flex-1 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all",
+                          type === t 
+                            ? "bg-white shadow-sm " + (t === 'INCOME' ? "text-emerald-600" : "text-rose-600")
+                            : "text-slate-400"
+                        )}
+                      >
+                        {t === 'INCOME' ? 'Sale' : 'Expense'}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {/* Amount Input */}
-                    <div className="relative">
-                       <Input 
+                    <div className="relative group">
+                       <input 
                         type="number" 
+                        step="0.01"
                         placeholder="0.00" 
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         required
-                        className="bg-slate-50 border-none px-4 py-8 rounded-2xl text-2xl font-black text-center"
+                        className="w-full bg-slate-50 border-none px-4 py-6 rounded-xl text-xl font-black text-center focus:ring-1 focus:ring-blue-100 outline-none"
                       />
-                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">$</span>
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg font-black text-slate-200 group-focus-within:text-slate-400">$</span>
                     </div>
 
-                    {/* Linking Option (Product Select) */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center px-1">
-                        <Package size={12} className="mr-1.5" /> Link Inventory Item (Optional)
-                      </label>
-                      <select
-                        value={productId}
-                        onChange={(e) => handleProductChange(e.target.value)}
-                        className="w-full bg-slate-50 border-none px-4 py-4 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-100"
-                      >
-                        <option value="">Manual Entry (No Product Linked)</option>
-                        {products.map(p => (
-                          <option key={p.id} value={p.id}>{p.name} - In Stock: {p.quantity}</option>
-                        ))}
-                      </select>
+                    {/* Professional Info Group */}
+                    <div className="bg-slate-50/50 rounded-xl p-3.5 space-y-3.5">
+                       <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Business Details</label>
+                       
+                       <div className="grid grid-cols-3 gap-2">
+                          {paymentMethods.map(m => (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() => setPaymentMethod(m.id)}
+                              className={cn(
+                                "flex items-center justify-center space-x-2 py-2 px-1 rounded-lg border transition-all",
+                                paymentMethod === m.id ? "bg-white border-slate-900 shadow-sm" : "border-transparent opacity-50"
+                              )}
+                            >
+                               <m.icon size={12} className={m.color.split(' ')[1]} />
+                               <span className="text-[8px] font-black uppercase">{m.label}</span>
+                            </button>
+                          ))}
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-2.5">
+                          <div className="space-y-1">
+                             <label className="text-[7px] font-black uppercase tracking-widest text-slate-400 px-1">{type === 'INCOME' ? 'Customer' : 'Supplier'}</label>
+                             <input 
+                               type="text"
+                               placeholder="..."
+                               value={partyName}
+                               onChange={(e) => setPartyName(e.target.value)}
+                               className="w-full bg-white border border-slate-100 rounded-lg p-2.5 text-[9px] font-bold outline-none"
+                             />
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[7px] font-black uppercase tracking-widest text-slate-400 px-1">Ref No.</label>
+                             <input 
+                               type="text"
+                               placeholder="..."
+                               value={reference}
+                               onChange={(e) => setReference(e.target.value)}
+                               className="w-full bg-white border border-slate-100 rounded-lg p-2.5 text-[9px] font-bold outline-none"
+                             />
+                          </div>
+                       </div>
                     </div>
 
-                    {productId && (
-                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center px-1">
-                          <Hash size={12} className="mr-1.5" /> Order Quantity
-                        </label>
-                        <Input 
-                          type="number" 
-                          min="1"
-                          value={quantity}
-                          onChange={(e) => setQuantity(e.target.value)}
-                          className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
-                        />
+                    <div className="space-y-3.5">
+                      {/* Product Selector */}
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Link Inventory</label>
+                        <select
+                          value={productId}
+                          onChange={(e) => handleProductChange(e.target.value)}
+                          className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                        >
+                          <option value="">No link</option>
+                          {products.map(p => (
+                            <option key={p.id} value={p.id}>{p.name} ({p.quantity})</option>
+                          ))}
+                        </select>
                       </div>
-                    )}
 
-                    <Input 
-                      label="Category / Item Name" 
-                      placeholder="e.g., General Sale, Rent, Supplies" 
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      required
-                      className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
-                    />
+                      {productId && (
+                        <div className="space-y-1 animate-in fade-in duration-200">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Quantity</label>
+                          <input 
+                            type="number" 
+                            min="1"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                          />
+                        </div>
+                      )}
 
-                    <Input 
-                      label="Public Note / Note" 
-                      placeholder="Optional additional details..." 
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
-                    />
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
+                          <input 
+                            type="text" 
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            placeholder="e.g., Sale"
+                            className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Note</label>
+                          <input 
+                            type="text" 
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder="..."
+                            className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="pt-4 pb-4">
-                    <Button type="submit" className="w-full bg-blue-600 text-white py-8 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-100">
-                      Confirm Record
+                  <div className="pt-2">
+                    <Button 
+                      type="submit" 
+                      isLoading={isLoading}
+                      className="w-full bg-blue-600 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-blue-100"
+                    >
+                      Save Record
                     </Button>
                   </div>
                 </form>
@@ -376,7 +498,7 @@ function TransactionsContent() {
 
 export default function TransactionsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading Journal...</div>}>
       <TransactionsContent />
     </Suspense>
   );

@@ -101,10 +101,58 @@ export const getFinancialSummary = async (userId) => {
     insights.push(`Your weekly expenses increased by ${expenseSpike}% compared to last week.`);
   }
 
+  // 7. Category Distribution
+  const getCategoryDistribution = (txs, type) => {
+    const filtered = txs.filter(t => t.type === type);
+    const total = filtered.reduce((sum, t) => sum + t.amount, 0);
+    const distribution = filtered.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
+      return acc;
+    }, {});
+
+    return Object.entries(distribution)
+      .map(([label, value]) => ({
+        label,
+        value: Math.round((value / total) * 100) || 0,
+        amount: value
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5); // Top 5 categories
+  };
+
+  const incomeDistribution = getCategoryDistribution(allTransactions, 'INCOME');
+  const expenseDistribution = getCategoryDistribution(allTransactions, 'EXPENSE');
+
+  // 8. Top Selling Products
+  const productSales = allTransactions
+    .filter(t => t.type === 'INCOME' && t.productId)
+    .reduce((acc, t) => {
+      if (!acc[t.productId]) {
+        acc[t.productId] = { id: t.productId, quantity: 0, revenue: 0 };
+      }
+      acc[t.productId].quantity += (t.quantity || 1);
+      acc[t.productId].revenue += t.amount;
+      return acc;
+    }, {});
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: Object.keys(productSales) } },
+    select: { id: true, name: true }
+  });
+
+  const topSellingProducts = Object.values(productSales)
+    .map(sale => ({
+      ...sale,
+      name: products.find(p => p.id === sale.id)?.name || 'Unknown Product'
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 4);
+
   return {
     totalIncome,
     totalExpense,
     profit: totalIncome - totalExpense,
+    profitMargin: totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0,
     totalReceivable,
     totalPayable: debts.filter(d => d.type === 'PAYABLE').reduce((sum, d) => sum + d.remainingAmount, 0),
     trends: {
@@ -114,6 +162,9 @@ export const getFinancialSummary = async (userId) => {
       expenseToday
     },
     chartData,
-    insights
+    insights,
+    incomeDistribution,
+    expenseDistribution,
+    topSellingProducts
   };
 };

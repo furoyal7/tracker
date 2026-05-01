@@ -3,9 +3,12 @@ import { successResponse, errorResponse } from '../utils/response.js';
 
 export const createTransaction = async (req, res) => {
   try {
+    console.log('[DEBUG] Controller - Create Transaction triggered');
     const transaction = await transactionService.createTransaction(req.user.id, req.body);
+    console.log('[DEBUG] Controller - Success, returning transaction');
     return successResponse(res, transaction, 'Transaction created', 201);
   } catch (error) {
+    console.error('[ERROR] Controller - Create Transaction failed:', error.message);
     return errorResponse(res, error.message, 400);
   }
 };

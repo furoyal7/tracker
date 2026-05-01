@@ -9,6 +9,7 @@ export const validate = (schema) => (req, res, next) => {
     });
     next();
   } catch (error) {
+    console.error('Validation Error:', error.errors);
     return errorResponse(res, 'Validation Error', 400, error.errors);
   }
 };

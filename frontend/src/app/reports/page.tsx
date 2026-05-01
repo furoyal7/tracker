@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { 
   TrendingUp, 
@@ -8,13 +8,20 @@ import {
   PieChart as PieChartIcon, 
   ArrowUpRight, 
   Download,
-  Calendar
+  Calendar,
+  Zap,
+  ShoppingBag,
+  Info,
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
 import { useFinanceStore } from '@/store/financeStore';
 import { FinancialChart } from '@/features/dashboard/FinancialChart';
+import { cn } from '@/utils/cn';
 
 export default function ReportsPage() {
   const { summary } = useFinanceStore();
+  const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -26,93 +33,204 @@ export default function ReportsPage() {
   };
 
   const performanceItems = [
-    { label: 'Revenue', value: summary?.totalIncome || 0, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
-    { label: 'Expenses', value: summary?.totalExpense || 0, icon: TrendingDown, color: 'text-rose-600', bg: 'bg-rose-50/50' },
-    { label: 'Net Profit', value: summary?.profit || 0, icon: DollarSign, color: 'text-blue-600', bg: 'bg-blue-50/50' },
+    { 
+      label: 'Total Revenue', 
+      value: summary?.totalIncome || 0, 
+      icon: TrendingUp, 
+      color: 'text-emerald-600', 
+      bg: 'bg-emerald-50',
+      description: 'Total sales generated'
+    },
+    { 
+      label: 'Net Expenses', 
+      value: summary?.totalExpense || 0, 
+      icon: TrendingDown, 
+      color: 'text-rose-600', 
+      bg: 'bg-rose-50',
+      description: 'Operations & costs'
+    },
+    { 
+      label: 'Net Profit', 
+      value: summary?.profit || 0, 
+      icon: DollarSign, 
+      color: 'text-blue-600', 
+      bg: 'bg-blue-50',
+      description: `${summary?.profitMargin || 0}% Profit Margin`
+    },
   ];
+
+  const currentDistribution = activeTab === 'EXPENSE' 
+    ? summary?.expenseDistribution || [] 
+    : summary?.incomeDistribution || [];
 
   return (
     <MainLayout>
-      <div className="flex flex-col space-y-6">
+      <div className="flex flex-col space-y-8 pb-28">
         
-        {/* 📅 Period Selector */}
-        <div className="flex items-center justify-between">
-           <div className="flex items-center space-x-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-50 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              <Calendar size={14} className="text-blue-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900">This Month</span>
+        {/* 🔝 Professional Header */}
+        <div className="flex items-end justify-between px-1">
+           <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-1">Financial Intelligence</p>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900">Performance Report</h1>
            </div>
-           <button className="h-10 w-10 flex items-center justify-center bg-slate-900 text-white rounded-2xl shadow-xl shadow-slate-200 active:scale-90 transition-all">
-              <Download size={16} />
-           </button>
+           <div className="flex space-x-2">
+              <button className="h-10 px-4 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-sm active:scale-95 transition-all flex items-center">
+                 <Calendar size={12} className="mr-2" />
+                 Last 7 Days
+              </button>
+           </div>
         </div>
 
-        {/* 📊 Key Performance Stack (Minimized) */}
-        <div className="flex flex-col space-y-2.5">
+        {/* 📈 Primary Metrics Grid */}
+        <div className="grid grid-cols-1 gap-4">
            {performanceItems.map((item) => (
-             <div key={item.label} className="bg-white rounded-[1.5rem] p-4 border border-slate-50 shadow-sm flex items-center justify-between transition-all active:scale-[0.99]">
-                <div className="flex items-center space-x-3">
-                   <div className={`h-8 w-8 flex items-center justify-center rounded-xl ${item.bg} ${item.color}`}>
-                      <item.icon size={16} strokeWidth={2.5} />
+             <div key={item.label} className="bg-white rounded-[1.5rem] p-6 border border-slate-50 shadow-sm flex items-center justify-between transition-all group">
+                <div className="flex items-center space-x-5">
+                   <div className={cn("h-12 w-12 flex items-center justify-center rounded-2xl transition-transform", item.bg, item.color)}>
+                      <item.icon size={22} strokeWidth={2.5} />
                    </div>
                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 leading-none mb-1.5">{item.label}</p>
-                      <h4 className="text-sm font-black text-slate-900 tabular-nums leading-none">
+                      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-1">{item.label}</p>
+                      <h4 className="text-xl font-black text-slate-900 tabular-nums tracking-tight">
                         {formatCurrency(item.value)}
                       </h4>
+                      <p className="text-[9px] font-bold text-slate-300 mt-1 uppercase tracking-widest">{item.description}</p>
                    </div>
                 </div>
-                <div className="flex items-center text-emerald-600 text-[9px] font-black uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-full">
-                   <ArrowUpRight size={10} className="mr-0.5" />
-                   12%
-                </div>
+                <ChevronRight size={16} className="text-slate-100 group-hover:text-slate-300 transition-colors" />
              </div>
            ))}
         </div>
 
-        {/* 📈 Main Trajectory Graph */}
-        <section className="space-y-4 pt-2">
-           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-2">Growth Analysis</h3>
-           <div className="bg-white rounded-[2.5rem] p-6 border border-slate-50 shadow-sm">
+        {/* 🧠 Smart Insights AI (Clean Version) */}
+        {summary?.insights && summary.insights.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center space-x-2">
+                <Zap size={14} className="text-amber-500 fill-amber-500" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Intelligent Analysis</h3>
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">Live Updates</span>
+            </div>
+            <div className="flex space-x-3 overflow-x-auto no-scrollbar pb-2">
+              {summary.insights.map((insight, idx) => (
+                <div key={idx} className="flex-none w-[280px] bg-slate-50 border border-slate-100 p-5 rounded-[1.75rem] transition-all hover:bg-white hover:shadow-md group">
+                  <div className="flex items-start space-x-3">
+                    <div className="mt-1 p-1.5 bg-white rounded-lg shadow-sm">
+                      <Info size={14} className="text-slate-900" />
+                    </div>
+                    <p className="text-[11px] font-bold leading-relaxed text-slate-600">{insight}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 📉 Main Growth Chart */}
+        <section className="space-y-4">
+           <div className="flex items-center justify-between px-2">
+             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Growth Trajectory</h3>
+             <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                  <span className="text-[8px] font-black uppercase text-slate-400">In</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <div className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                  <span className="text-[8px] font-black uppercase text-slate-400">Out</span>
+                </div>
+             </div>
+           </div>
+           <div className="bg-white rounded-[2rem] p-6 border border-slate-50 shadow-sm">
               <FinancialChart />
            </div>
         </section>
 
-        {/* 🥧 Distribution Analysis (Premium Amber) */}
-        <div className="bg-amber-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-amber-100/50">
-           {/* Decorative background element */}
-           <div className="absolute -right-10 -top-10 w-40 h-40 bg-amber-400/10 rounded-full blur-3xl"></div>
-           
-           <div className="flex items-center space-x-3 mb-8 relative z-10">
-              <div className="p-2.5 bg-white/10 rounded-xl">
-                 <PieChartIcon size={20} className="text-amber-400" />
-              </div>
-              <h3 className="text-xs font-black uppercase tracking-[0.1em] text-white">Expense Distribution</h3>
-           </div>
-           
-           <div className="space-y-6 relative z-10">
-              {[
-                { label: 'Inventory', value: 45, color: 'bg-amber-400' },
-                { label: 'Operations', value: 30, color: 'bg-amber-100' },
-                { label: 'Marketing', value: 25, color: 'bg-amber-600' },
-              ].map((group) => (
-                <div key={group.label} className="space-y-2.5">
-                   <div className="flex justify-between text-[9px] font-black uppercase tracking-[0.15em]">
-                      <span className="text-amber-200/60">{group.label}</span>
-                      <span className="text-white">{group.value}%</span>
+        {/* 🏆 Top Performance (Sales) - Clean Design */}
+        {summary?.topSellingProducts && summary.topSellingProducts.length > 0 && (
+          <section className="space-y-4">
+             <div className="flex items-center space-x-2 px-2">
+                <ShoppingBag size={14} className="text-slate-400" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Sales Drivers</h3>
+             </div>
+             <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden">
+                <div className="divide-y divide-slate-50">
+                   {summary.topSellingProducts.map((product, idx) => (
+                     <div key={product.id} className="flex items-center justify-between p-5 active:bg-slate-50 transition-all">
+                        <div className="flex items-center space-x-4">
+                           <span className="text-[10px] font-black text-slate-200 tabular-nums">0{idx + 1}</span>
+                           <div>
+                              <p className="text-[11px] font-black text-slate-900 leading-none mb-1.5">{product.name}</p>
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{product.quantity} Units Sold</p>
+                           </div>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-sm font-black text-slate-900 tabular-nums tracking-tight">{formatCurrency(product.revenue)}</p>
+                        </div>
+                     </div>
+                   ))}
+                </div>
+                <button className="w-full py-4 bg-slate-50 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center justify-center border-t border-slate-100 hover:text-slate-600 transition-colors">
+                   View Full Inventory <ArrowRight size={10} className="ml-2" />
+                </button>
+             </div>
+          </section>
+        )}
+
+        {/* 🥧 Distribution Breakdown - Clean Design */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+             <div className="flex items-center space-x-2">
+                <PieChartIcon size={14} className="text-slate-400" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Budget Allocation</h3>
+             </div>
+             <div className="flex p-0.5 bg-slate-100 rounded-lg">
+                {(['EXPENSE', 'INCOME'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all",
+                      activeTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-400"
+                    )}
+                  >
+                    {tab === 'EXPENSE' ? 'Expenses' : 'Revenue'}
+                  </button>
+                ))}
+             </div>
+          </div>
+          
+          <div className="bg-white rounded-[2rem] p-8 border border-slate-50 shadow-sm space-y-7">
+             {currentDistribution.length > 0 ? currentDistribution.map((group, idx) => (
+                <div key={group.label} className="space-y-3">
+                   <div className="flex justify-between items-end px-1">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900">{group.label}</span>
+                        <span className="block text-[8px] font-bold text-slate-300 uppercase tracking-widest mt-1">{formatCurrency(group.amount)}</span>
+                      </div>
+                      <span className="text-[12px] font-black text-slate-900 tabular-nums">{group.value}%</span>
                    </div>
-                   <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                   <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
                       <div 
-                        className={`h-full ${group.color} rounded-full transition-all duration-1000 ease-out`} 
+                        className={cn(
+                          "h-full rounded-full transition-all duration-1000 ease-out",
+                          activeTab === 'EXPENSE' ? "bg-rose-500" : "bg-emerald-500"
+                        )} 
                         style={{ width: `${group.value}%` }}
                       ></div>
                    </div>
                 </div>
-              ))}
-           </div>
-        </div>
+             )) : (
+                <div className="py-10 text-center">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-200 italic">No historical data recorded</p>
+                </div>
+             )}
+          </div>
+        </section>
 
-        <div className="py-8 text-center">
-           <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-300">Intelligent insights synchronized for today</p>
+        <div className="py-10 text-center">
+           <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-200">System Intelligence Alpha • {new Date().getFullYear()}</p>
         </div>
 
       </div>

@@ -55,17 +55,23 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
 
   addTransaction: async (data) => {
-    set({ isLoading: true });
+    console.log('[TRACE] Store - Initiating POST /transactions', JSON.stringify(data, null, 2));
+    set({ isLoading: true, error: null });
     try {
-      await api.post('/transactions', data);
-      // Wait for background refreshes to ensure state is consistent
+      const response = await api.post('/transactions', data);
+      console.log('[TRACE] Store - API Success Response Received:', response.status || 'OK');
+      
       await Promise.all([
         get().fetchTransactions(undefined, true),
         get().fetchSummary(true)
       ]);
+      console.log('[FINANCE STORE] Refresh complete');
       set({ isLoading: false });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      console.error('[FINANCE STORE] API Failure:', error);
+      const message = error.message || 'Failed to add transaction';
+      set({ error: message, isLoading: false });
+      throw new Error(message);
     }
   },
 

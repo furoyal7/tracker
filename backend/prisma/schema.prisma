@@ -23,6 +23,7 @@ model User {
   exchangeOrders ExchangeOrder[]
   products       Product[]
   transactions   Transaction[]
+  sales          Sale[]
   createdConversations Conversation[] @relation("CreatedConversations")
   joinedConversations  Conversation[] @relation("JoinedConversations")
 }
@@ -37,6 +38,9 @@ model Transaction {
   type      TransactionType
   productId String?
   quantity  Int?            @default(1)
+  paymentMethod String?
+  partyName     String?
+  reference     String?
   product   Product?        @relation(fields: [productId], references: [id])
   user      User            @relation(fields: [userId], references: [id])
 }
@@ -52,6 +56,7 @@ model Product {
   updatedAt    DateTime      @updatedAt
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
+  saleItems    SaleItem[]
 }
 
 model Debt {
@@ -137,6 +142,57 @@ model VerificationLog {
   result            VerificationResult
   createdAt         DateTime           @default(now())
   order             ExchangeOrder      @relation(fields: [orderId], references: [id])
+}
+
+model Sale {
+  id              String      @id @default(uuid())
+  userId          String
+  customerId      String?     // Optional for now
+  customerName    String?
+  customerPhone   String?
+  customerType    String?     // retail, wholesale, repeat
+  branchId        String?     // identifier for multi-branch
+  status          SaleStatus  @default(COMPLETED)
+  paymentMethod   String      @default("CASH")
+  paymentStatus   String      @default("PAID")
+  
+  subtotal        Float
+  tax             Float       @default(0)
+  discount        Float       @default(0)
+  totalAmount     Float
+  amountPaid      Float
+  balance         Float       @default(0)
+  
+  channel         String      @default("IN_STORE")
+  reference       String?
+  notes           String?
+  
+  items           SaleItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  user            User        @relation(fields: [userId], references: [id])
+}
+
+model SaleItem {
+  id              String   @id @default(uuid())
+  saleId          String
+  productId       String?
+  productName     String
+  quantity        Int
+  unitPrice       Float
+  discount        Float    @default(0)
+  totalPrice      Float
+  
+  sale            Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product         Product? @relation(fields: [productId], references: [id])
+}
+
+enum SaleStatus {
+  COMPLETED
+  PENDING
+  CANCELLED
+  DRAFT
 }
 
 enum TransactionType {

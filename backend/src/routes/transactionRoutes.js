@@ -13,12 +13,20 @@ const transactionSchema = z.object({
     category: z.string(),
     note: z.string().optional(),
     date: z.string().optional(),
+    paymentMethod: z.string().optional(),
+    partyName: z.string().optional(),
+    reference: z.string().optional(),
+    productId: z.string().optional(),
+    quantity: z.number().int().positive().optional(),
   }),
 });
 
 router.use(authMiddleware);
 
-router.post('/', validate(transactionSchema), transactionController.createTransaction);
+router.post('/', (req, res, next) => {
+  console.log('[TRACE] Backend Route Hit: POST /api/transactions', { body: req.body });
+  next();
+}, validate(transactionSchema), transactionController.createTransaction);
 router.get('/', transactionController.getTransactions);
 router.get('/:id', transactionController.getTransactionById);
 router.put('/:id', validate(transactionSchema), transactionController.updateTransaction);

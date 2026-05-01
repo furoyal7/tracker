@@ -3,32 +3,52 @@ import prisma from '../lib/prisma.js';
 import * as productService from './productService.js';
 
 export const createTransaction = async (userId, transactionData) => {
+  console.log('[TRACE] Service - Database Operation Starting for user:', userId);
   const { productId, quantity = 1, ...rest } = transactionData;
 
-  return prisma.$transaction(async (tx) => {
-    // If a product is linked, adjust stock
-    if (productId && transactionData.type === 'INCOME') {
-      const product = await tx.product.findUnique({ where: { id: productId } });
-      if (!product) throw new Error('Product not found');
-      if (product.quantity < quantity) {
-        throw new Error(`Insufficient stock for ${product.name}`);
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // If a product is linked, adjust stock
+      if (productId && transactionData.type === 'INCOME') {
+        console.log('[DEBUG] Linking product and checking stock:', productId);
+        const product = await tx.product.findUnique({ where: { id: productId } });
+        
+        if (!product) {
+          console.error('[ERROR] Product not found:', productId);
+          throw new Error('Product not found');
+        }
+        
+        if (product.quantity < quantity) {
+          console.error('[ERROR] Insufficient stock:', { product: product.name, current: product.quantity, requested: quantity });
+          throw new Error(`Insufficient stock for ${product.name}`);
+        }
+
+        await tx.product.update({
+          where: { id: productId },
+          data: { quantity: { decrement: quantity } },
+        });
+        console.log('[DEBUG] Stock updated successfully');
       }
 
-      await tx.product.update({
-        where: { id: productId },
-        data: { quantity: { decrement: quantity } },
+      const transaction = await tx.transaction.create({
+        data: {
+          ...rest,
+          date: rest.date ? new Date(rest.date) : new Date(),
+          productId,
+          quantity,
+          userId,
+        },
       });
-    }
-
-    return tx.transaction.create({
-      data: {
-        ...rest,
-        productId,
-        quantity,
-        userId,
-      },
+      
+      console.log('[DEBUG] Transaction record created in DB:', transaction.id);
+      return transaction;
     });
-  });
+
+    return result;
+  } catch (error) {
+    console.error('[CRITICAL ERROR] Transaction creation failed:', error);
+    throw error;
+  }
 };
 
 

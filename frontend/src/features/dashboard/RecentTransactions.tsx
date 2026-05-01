@@ -42,10 +42,22 @@ export const RecentTransactions = () => {
               {transaction.type === 'INCOME' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
             </div>
             <div>
-              <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">{transaction.category}</p>
-              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">
-                {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">
+                {transaction.partyName || transaction.category}
               </p>
+              <div className="flex items-center space-x-2 mt-1">
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                  {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+                {transaction.partyName && (
+                  <>
+                    <span className="h-1 w-1 rounded-full bg-slate-100" />
+                    <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest leading-none">
+                      {transaction.category}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           <p className={cn(

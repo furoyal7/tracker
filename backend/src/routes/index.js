@@ -8,11 +8,13 @@ import reportRoutes from './reportRoutes.js';
 import chatRoutes from './chatRoutes.js';
 import exchangeRoutes from './exchangeRoutes.js';
 import userRoutes from './userRoutes.js';
+import saleRoutes from './saleRoutes.js';
 
 const router = express.Router();
 
 router.use('/auth', authRoutes);
 router.use('/transactions', transactionRoutes);
+router.use('/sales', saleRoutes);
 router.use('/debts', debtRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/products', productRoutes);
