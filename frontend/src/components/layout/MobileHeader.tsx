@@ -28,58 +28,26 @@ export const MobileHeader = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-50 px-4 py-3">
-        <div className="flex items-center justify-between h-10 max-w-7xl mx-auto">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-50 px-4 py-3">
+        <div className="flex items-center justify-between h-10 max-w-lg mx-auto">
           
-          <div className="flex items-center gap-3">
-            {/* Hamburger Button (Mobile Only) */}
+          <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-slate-600 active:bg-slate-100 rounded-xl transition-all"
+              className="p-2 -ml-2 text-slate-600 active:bg-slate-50 rounded-full transition-colors"
             >
-              <Menu size={20} />
+              <Menu size={22} />
             </button>
-
-            {/* Logo Identity */}
-            <Link href="/" className="flex items-center gap-2 active:scale-95 transition-all">
-              <div className="h-9 w-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
-                <span className="text-white font-black text-lg italic leading-none">M</span>
-              </div>
-              <span className="text-xs font-black text-slate-900 uppercase tracking-widest hidden sm:block">MoneyManager</span>
-            </Link>
+            <h1 className="text-[18px] font-bold text-slate-900 tracking-tight">Expenses</h1>
           </div>
 
-          {/* Desktop Nav Links (Visible on LG+) */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            {menuItems.map((item) => (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                className={cn(
-                  "text-[10px] font-black uppercase tracking-[0.2em] transition-colors",
-                  pathname === item.href ? "text-blue-600" : "text-slate-400 hover:text-blue-600"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end text-right">
-              <div className="flex items-center justify-end space-x-1 mb-0.5">
-                <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-[7px] font-black text-slate-800 uppercase tracking-[0.1em] leading-none">Live Sync</span>
-              </div>
-              <p className="text-[8px] font-bold text-slate-400 font-mono tracking-tighter opacity-70">{today}</p>
-            </div>
-            
-            <Link href="/settings" className="relative group active:scale-95 transition-all">
-              <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100/50">
+          <div className="flex items-center gap-2">
+            <Link href="/settings" className="active:scale-95 transition-all">
+              <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100/50">
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt="ME" className="h-full w-full object-cover" />
                 ) : (
-                  <UserIcon size={16} className="text-blue-600" />
+                  <UserIcon size={18} className="text-blue-600" />
                 )}
               </div>
             </Link>

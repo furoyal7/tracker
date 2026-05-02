@@ -60,6 +60,12 @@ export default function InventoryPage() {
     setIsAdding(true);
   };
 
+  const preventInvalidChars = (e: React.KeyboardEvent) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -108,69 +114,70 @@ export default function InventoryPage() {
              placeholder="Search items..."
              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none"
              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+             onChange={(e) => setSearchQuery(e.target.value)}
            />
         </div>
 
-        {/* 📦 Product Cards */}
-        <div className="flex flex-col space-y-4">
+        {/* 📋 Inventory List (Telegram Style) */}
+        <div className="flex flex-col bg-white overflow-hidden border-y border-slate-50">
            {filteredProducts.length === 0 && !isLoading ? (
              <div className="py-20 text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">No products found</p>
+                <p className="text-[14px] text-slate-400">No items in inventory</p>
              </div>
            ) : (
-             filteredProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-6 space-y-5 transition-all active:scale-95">
-                   <div className="flex items-start justify-between">
-                      <div className="flex flex-col">
-                         <h4 className="text-base font-black text-slate-900 uppercase tracking-tight">{product.name}</h4>
-                         <span className={cn(
-                           "text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest mt-1 w-fit",
-                           product.quantity > 5 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600 animate-pulse"
-                         )}>
-                            {product.quantity} In Stock
-                         </span>
+             filteredProducts.map((product, index) => (
+                <div 
+                  key={product.id} 
+                  className={cn(
+                    "flex items-center justify-between px-4 py-3 active:bg-slate-100 transition-colors cursor-pointer",
+                    index !== 0 && "border-t border-slate-50"
+                  )}
+                  onClick={() => handleEdit(product)}
+                >
+                   <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      {/* Left: Circle Icon */}
+                      <div className={cn(
+                        "h-12 w-12 rounded-full flex items-center justify-center shrink-0",
+                        product.quantity > 5 ? "bg-blue-50 text-blue-600" : "bg-rose-50 text-rose-600"
+                      )}>
+                        <Package size={20} strokeWidth={2.5} />
                       </div>
-                      <div className="flex space-x-2">
-                         <button onClick={() => handleEdit(product)} className="p-2.5 bg-slate-50 rounded-xl text-slate-400 active:text-blue-600">
-                            <Edit2 size={16} />
-                         </button>
-                         <button onClick={() => deleteProduct(product.id)} className="p-2.5 bg-slate-50 rounded-xl text-slate-400 active:text-rose-600">
-                            <Trash2 size={16} />
-                         </button>
-                      </div>
-                   </div>
 
-                   <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50">
-                      <div>
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cost Price</p>
-                         <p className="text-sm font-bold text-slate-700">{formatCurrency(product.costPrice)}</p>
+                      {/* Center: Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[16px] font-bold text-slate-900 truncate pr-2">
+                            {product.name}
+                          </p>
+                          <p className="text-[16px] font-bold text-blue-600 shrink-0">
+                            {formatCurrency(product.sellingPrice)}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <div className="flex items-center space-x-2">
+                            <span className={cn(
+                              "text-[12px] font-medium",
+                              product.quantity > 5 ? "text-emerald-600" : "text-rose-600"
+                            )}>
+                              {product.quantity} units left
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 shrink-0">
+                            Cost: {formatCurrency(product.costPrice)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sale Price</p>
-                         <p className="text-sm font-black text-blue-600">{formatCurrency(product.sellingPrice)}</p>
-                      </div>
-                   </div>
-
-                   <div className="flex items-center justify-between px-1">
-                      <div className="flex items-center space-x-1.5 text-blue-600">
-                         <TrendingUp size={14} />
-                         <span className="text-[10px] font-black uppercase tracking-widest">
-                            Margin: {Math.round(((product.sellingPrice - product.costPrice) / product.costPrice) * 100)}%
-                         </span>
-                      </div>
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">#{product.id.slice(-4)}</span>
                    </div>
                 </div>
              ))
            )}
         </div>
 
-        {/* ➕ FAB for New Product */}
+        {/* ➕ FAB (Telegram Style) */}
         {!isAdding && (
           <button 
             onClick={() => setIsAdding(true)}
-            className="fixed bottom-24 right-6 z-40 bg-slate-900 text-white p-4 rounded-full shadow-2xl active:scale-95 transition-all outline-none border-none"
+            className="fixed bottom-24 right-6 z-40 bg-blue-600 text-white h-14 w-14 rounded-full shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center active:scale-90 transition-all border-none animate-in zoom-in duration-300"
           >
             <Plus size={28} strokeWidth={3} />
           </button>
@@ -204,6 +211,7 @@ export default function InventoryPage() {
                         type="number" 
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
+                        onKeyDown={preventInvalidChars}
                         required
                         className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
                       />
@@ -213,6 +221,7 @@ export default function InventoryPage() {
                           type="number" 
                           value={costPrice}
                           onChange={(e) => setCostPrice(e.target.value)}
+                          onKeyDown={preventInvalidChars}
                           required
                           className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
                         />
@@ -221,6 +230,7 @@ export default function InventoryPage() {
                           type="number" 
                           value={sellingPrice}
                           onChange={(e) => setSellingPrice(e.target.value)}
+                          onKeyDown={preventInvalidChars}
                           required
                           className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
                         />

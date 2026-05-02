@@ -61,91 +61,46 @@ export default function DashboardPage() {
 
   return (
     <MainLayout>
-      <div className="flex flex-col space-y-10">
+      <div className="flex flex-col space-y-8 max-w-lg mx-auto">
         
-        {/* 📊 Financial Summary */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Financial Pulse</h3>
-             <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full">REALTIME</span>
+        {/* 📊 Financial Summary (Flat Cards) */}
+        <section className="space-y-3 px-4">
+          <div className="flex items-center justify-between">
+             <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Financial Pulse</h3>
           </div>
           <DashboardSummary />
         </section>
 
         {/* 🛠️ Quick Actions */}
-        <section className="space-y-4">
-           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Merchant Core</h3>
+        <section className="space-y-3 px-4">
+           <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Quick Actions</h3>
            <QuickActions />
         </section>
 
         {/* 📉 Performance */}
-        <section className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Growth Trajectory</h3>
-          <div className="bg-white rounded-[2.5rem] p-6 border border-slate-50 shadow-[0_4px_20px_-1px_rgba(0,0,0,0.01)] transition-all hover:shadow-xl hover:shadow-blue-50/50">
+        <section className="space-y-3 px-4">
+          <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Performance</h3>
+          <div className="bg-white rounded-2xl p-4 border border-slate-50">
             <FinancialChart />
           </div>
         </section>
 
-        {/* 🔃 Exchange Pulse (Contextual) */}
-        {activeSession && (
-          <section className="space-y-4 animate-ingress">
-             <div className="flex items-center justify-between px-1">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Exchange Pulse</h3>
-                <Link href="/exchange" className="text-[8px] font-black text-slate-400 uppercase tracking-widest hover:underline">Manage All</Link>
-             </div>
-             <Link href={`/exchange/${activeSession.id}`} className="block">
-                <div className="bg-slate-900 rounded-[2rem] p-6 shadow-xl shadow-indigo-100/20 relative overflow-hidden group active:scale-95 transition-all">
-                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
-                      <Repeat size={80} strokeWidth={1} className="text-white" />
-                   </div>
-                   <div className="relative z-10 flex items-center justify-between">
-                      <div className="space-y-2">
-                         <div className="flex items-center space-x-2">
-                            <div className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></div>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400">Active Session</span>
-                         </div>
-                         <h4 className="text-sm font-black text-white uppercase tracking-tight">#{activeSession.referenceCode}</h4>
-                         <div className="flex items-center space-x-3 pt-1">
-                            <div className="flex items-center space-x-1.5">
-                               <Clock size={10} className="text-slate-500" />
-                               <span className="text-[8px] font-black text-slate-500 uppercase">{activeSession.status.replace('_', ' ')}</span>
-                            </div>
-                            <div className="flex items-center space-x-1.5">
-                               <ShieldCheck size={10} className="text-slate-500" />
-                               <span className="text-[8px] font-black text-slate-500 uppercase">L2 SECURE</span>
-                            </div>
-                         </div>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Value</p>
-                         <p className="text-lg font-black text-white leading-none">
-                            {activeSession.expectedReceiveAmount.toLocaleString()} <span className="text-[10px] text-indigo-400">{activeSession.toCurrency}</span>
-                         </p>
-                      </div>
-                   </div>
-                </div>
-             </Link>
-          </section>
-        )}
-
-        {/* 📋 Recent Activity */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Activity Feed</h3>
-            <Link href="/transactions" className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline">
-              View History
+        {/* 📋 Recent Activity (Telegram List) */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-4">
+            <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Recent Transactions</h3>
+            <Link href="/transactions" className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">
+              See All
             </Link>
           </div>
-          <div className="bg-white rounded-[2.5rem] border border-slate-50 overflow-hidden shadow-sm">
+          <div className="bg-white border-y border-slate-50 overflow-hidden">
              <RecentTransactions />
           </div>
         </section>
 
-        {/* 🛠️ Maintenance Info */}
         <div className="py-6 text-center">
-          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-200">End-to-End Encryption Active</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">Secured with End-to-End Encryption</p>
         </div>
-
       </div>
     </MainLayout>
   );

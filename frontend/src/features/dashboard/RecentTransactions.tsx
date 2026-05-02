@@ -28,44 +28,47 @@ export const RecentTransactions = () => {
   }
 
   return (
-    <div className="flex flex-col divide-y divide-slate-50">
-      {transactions.slice(0, 8).map((transaction: Transaction) => (
+    <div className="flex flex-col bg-white">
+      {transactions.slice(0, 10).map((transaction: Transaction, index) => (
         <div 
           key={transaction.id} 
-          className="flex items-center justify-between p-4 active:bg-slate-50 transition-all"
+          className={cn(
+            "flex items-center justify-between px-4 py-3 active:bg-slate-100 transition-colors cursor-pointer",
+            index !== 0 && "border-t border-slate-50"
+          )}
         >
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            {/* Left: Category Icon (Telegram style circle) */}
             <div className={cn(
-              "h-8 w-8 rounded-xl flex items-center justify-center",
+              "h-11 w-11 rounded-full flex items-center justify-center shrink-0",
               transaction.type === 'INCOME' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
             )}>
-              {transaction.type === 'INCOME' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+              {transaction.type === 'INCOME' ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
             </div>
-            <div>
-              <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">
-                {transaction.partyName || transaction.category}
-              </p>
-              <div className="flex items-center space-x-2 mt-1">
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+
+            {/* Center: Info */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[15px] font-bold text-slate-900 truncate pr-2">
+                  {transaction.partyName || transaction.category}
+                </p>
+                <p className={cn(
+                  "text-[15px] font-bold tabular-nums shrink-0",
+                  transaction.type === 'INCOME' ? "text-emerald-600" : "text-rose-600"
+                )}>
+                  {transaction.type === 'INCOME' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                </p>
+              </div>
+              <div className="flex items-center justify-between mt-0.5">
+                <p className="text-[13px] text-slate-500 truncate">
+                  {transaction.category}{transaction.note ? ` • ${transaction.note}` : ''}
+                </p>
+                <p className="text-[11px] text-slate-400 shrink-0">
                   {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </p>
-                {transaction.partyName && (
-                  <>
-                    <span className="h-1 w-1 rounded-full bg-slate-100" />
-                    <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest leading-none">
-                      {transaction.category}
-                    </p>
-                  </>
-                )}
               </div>
             </div>
           </div>
-          <p className={cn(
-            "text-sm font-black tabular-nums leading-none",
-            transaction.type === 'INCOME' ? "text-emerald-600" : "text-rose-600"
-          )}>
-            {transaction.type === 'INCOME' ? '+' : '-'}{formatCurrency(transaction.amount)}
-          </p>
         </div>
       ))}
     </div>

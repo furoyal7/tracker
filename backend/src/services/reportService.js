@@ -45,11 +45,22 @@ export const getFinancialSummary = async (userId) => {
     const totalReceivable = debtTotals.find(d => d.type === 'RECEIVABLE')?._sum.remainingAmount || 0;
     const totalPayable = debtTotals.find(d => d.type === 'PAYABLE')?._sum.remainingAmount || 0;
 
-    // 3. Trends (Today vs Yesterday)
-    const incomeToday = dailyTotals.filter(t => t.type === 'INCOME' && new Date(t.date) >= todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
-    const incomeYesterday = dailyTotals.filter(t => t.type === 'INCOME' && new Date(t.date) >= yesterdayStart && new Date(t.date) < todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
-    const expenseToday = dailyTotals.filter(t => t.type === 'EXPENSE' && new Date(t.date) >= todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
-    const expenseYesterday = dailyTotals.filter(t => t.type === 'EXPENSE' && new Date(t.date) >= yesterdayStart && new Date(t.date) < todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
+    // 3. Trends (Today vs Yesterday) - Grouped correctly by truncated date
+    const incomeToday = dailyTotals
+      .filter(t => t.type === 'INCOME' && startOfDay(new Date(t.date)).getTime() === todayStart.getTime())
+      .reduce((s, t) => s + (t._sum.amount || 0), 0);
+      
+    const incomeYesterday = dailyTotals
+      .filter(t => t.type === 'INCOME' && startOfDay(new Date(t.date)).getTime() === yesterdayStart.getTime())
+      .reduce((s, t) => s + (t._sum.amount || 0), 0);
+      
+    const expenseToday = dailyTotals
+      .filter(t => t.type === 'EXPENSE' && startOfDay(new Date(t.date)).getTime() === todayStart.getTime())
+      .reduce((s, t) => s + (t._sum.amount || 0), 0);
+      
+    const expenseYesterday = dailyTotals
+      .filter(t => t.type === 'EXPENSE' && startOfDay(new Date(t.date)).getTime() === yesterdayStart.getTime())
+      .reduce((s, t) => s + (t._sum.amount || 0), 0);
 
     const calculateChange = (current, previous) => {
       if (previous === 0) return current > 0 ? 100 : 0;

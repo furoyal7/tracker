@@ -137,6 +137,12 @@ function TransactionsContent() {
     setReference('');
   };
 
+  const preventInvalidChars = (e: React.KeyboardEvent) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   // Sync amount with selected product if it's an Income/Sale
   const handleProductChange = (id: string) => {
     setProductId(id);
@@ -248,75 +254,68 @@ function TransactionsContent() {
            </div>
         )}
 
-        {/* 📜 Transaction List */}
-        <div className="flex flex-col space-y-2.5">
+        {/* 📜 Transaction List (Telegram Style) */}
+        <div className="flex flex-col bg-white overflow-hidden">
            {filteredTransactions.length === 0 && !isLoading ? (
              <div className="py-20 text-center">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300">No entries recorded</p>
+                <p className="text-[14px] text-slate-400">No transactions found</p>
              </div>
            ) : (
-             filteredTransactions.map((t) => (
-                <div key={t.id} className="bg-white rounded-2xl border border-slate-50 p-3.5 flex flex-col space-y-2.5 shadow-sm active:bg-slate-50 transition-colors">
-                   <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={cn(
-                          "h-8 w-8 rounded-lg flex items-center justify-center",
-                          t.type === 'INCOME' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-                        )}>
-                          {t.type === 'INCOME' ? <ArrowUpRight size={14} strokeWidth={3} /> : <ArrowDownRight size={14} strokeWidth={3} />}
-                        </div>
-                        <div className="flex flex-col">
-                           <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight leading-none">{t.partyName || t.category}</h4>
-                           <div className="flex items-center space-x-1.5 mt-1">
-                             <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
-                               {new Date(t.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                             </span>
-                             {t.paymentMethod && (
-                               <span className="text-[7px] font-black text-slate-200 uppercase tracking-widest">
-                                 | {t.paymentMethod}
-                               </span>
-                             )}
-                           </div>
-                        </div>
+             filteredTransactions.map((t, index) => (
+                <div 
+                  key={t.id} 
+                  className={cn(
+                    "flex items-center justify-between px-4 py-3 active:bg-slate-100 transition-colors cursor-pointer",
+                    index !== 0 && "border-t border-slate-50"
+                  )}
+                >
+                   <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      {/* Left: Category Icon */}
+                      <div className={cn(
+                        "h-12 w-12 rounded-full flex items-center justify-center shrink-0 shadow-sm",
+                        t.type === 'INCOME' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                      )}>
+                        {t.type === 'INCOME' ? <ArrowUpRight size={20} strokeWidth={2.5} /> : <ArrowDownRight size={20} strokeWidth={2.5} />}
                       </div>
-                      <div className="text-right">
-                         <p className={cn(
-                           "text-[13px] font-black tabular-nums leading-none",
-                           t.type === 'INCOME' ? "text-emerald-600" : "text-rose-600"
-                         )}>
-                           {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
-                         </p>
-                         {t.reference && (
-                           <p className="text-[6px] font-bold text-slate-300 uppercase tracking-widest mt-1">#{t.reference}</p>
-                         )}
+
+                      {/* Center: Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[16px] font-semibold text-slate-900 truncate pr-2">
+                            {t.partyName || t.category}
+                          </p>
+                          <p className={cn(
+                            "text-[16px] font-bold tabular-nums shrink-0",
+                            t.type === 'INCOME' ? "text-emerald-600" : "text-rose-600"
+                          )}>
+                            {t.type === 'INCOME' ? '+' : '-'}{formatCurrency(t.amount)}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <div className="flex items-center space-x-2 truncate pr-4">
+                            <span className="text-[13px] text-slate-500 truncate">{t.category}</span>
+                            {t.paymentMethod && (
+                              <span className="text-[11px] text-slate-300 font-medium uppercase tracking-wider">{t.paymentMethod}</span>
+                            )}
+                          </div>
+                          <p className="text-[12px] text-slate-400 shrink-0">
+                            {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
                       </div>
                    </div>
-                   
-                   {(t.note || t.productId) && (
-                     <div className="flex items-center justify-between pl-11 pt-2 border-t border-slate-50/50">
-                        <p className="text-[8px] font-medium text-slate-400 italic truncate max-w-[65%]">
-                          {t.note || t.category}
-                        </p>
-                        {t.productId && (
-                          <div className="flex items-center space-x-1 text-blue-500/60">
-                             <Package size={8} />
-                             <span className="text-[7px] font-black uppercase tracking-widest">{t.quantity}qty</span>
-                          </div>
-                        )}
-                     </div>
-                   )}
                 </div>
              ))
            )}
         </div>
 
-        {/* ➕ FAB */}
+        {/* ➕ FAB (Telegram Style) */}
         {!isAdding && (
           <button 
             onClick={() => setIsAdding(true)}
-            className="fixed bottom-24 right-6 z-40 bg-slate-900 text-white p-3.5 rounded-2xl shadow-xl active:scale-90 transition-all border-none"
+            className="fixed bottom-24 right-6 z-40 bg-blue-600 text-white h-14 w-14 rounded-full shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center active:scale-90 transition-all border-none animate-in zoom-in duration-300"
           >
-            <Plus size={20} strokeWidth={3} />
+            <Plus size={28} strokeWidth={3} />
           </button>
         )}
 
@@ -332,166 +331,114 @@ function TransactionsContent() {
             }}
           >
              <div 
-               className="bg-white rounded-t-[2.5rem] p-6 pb-12 animate-in slide-in-from-bottom duration-500 max-h-[90vh] overflow-y-auto no-scrollbar shadow-[0_-20px_50px_-15px_rgba(0,0,0,0.1)] relative z-[10001]"
-               onClick={(e) => {
-                 e.stopPropagation(); // Stop click from hitting the backdrop
-               }}
-             >
-                <div className="flex items-center justify-between mb-6">
-                   <h2 className="text-sm font-black uppercase tracking-tight text-slate-900">Add Entry</h2>
-                   <button onClick={() => setIsAdding(false)} className="p-2 bg-slate-50 rounded-full text-slate-400">
-                      <X size={16} />
-                   </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Type Selector */}
-                  <div className="flex items-center p-1 bg-slate-50 rounded-xl w-full">
-                    {['INCOME', 'EXPENSE'].map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setType(t as any)}
-                        className={cn(
-                          "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
-                          type === t 
-                            ? "bg-white shadow-sm " + (t === 'INCOME' ? "text-emerald-600" : "text-rose-600")
-                            : "text-slate-400"
-                        )}
-                      >
-                        {t === 'INCOME' ? 'Sale' : 'Expense'}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-5">
-                    {/* Amount Input */}
-                    <div className="relative group">
-                       <input 
-                        type="number" 
-                        inputMode="decimal"
-                        step="0.01"
-                        placeholder="0.00" 
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        required
-                        className="w-full bg-slate-50 border-none px-4 py-8 rounded-2xl text-3xl font-black text-center focus:ring-1 focus:ring-blue-100 outline-none transition-all"
-                      />
-                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xl font-black text-slate-200 group-focus-within:text-slate-400">$</span>
-                    </div>
-
-                    {/* Professional Info Group */}
-                    <div className="bg-slate-50/50 rounded-2xl p-4 md:p-6 space-y-4">
-                       <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Business Details</label>
-                       
-                       <div className="grid grid-cols-3 gap-2">
-                          {paymentMethods.map(m => (
-                            <button
-                              key={m.id}
-                              type="button"
-                              onClick={() => setPaymentMethod(m.id)}
-                              className={cn(
-                                "flex items-center justify-center space-x-2 py-3 px-1 rounded-xl border transition-all min-h-[44px]",
-                                paymentMethod === m.id ? "bg-white border-slate-900 shadow-sm" : "border-transparent opacity-50"
-                              )}
-                            >
-                               <m.icon size={14} className={m.color.split(' ')[1]} />
-                               <span className="text-[9px] font-black uppercase">{m.label}</span>
-                            </button>
-                          ))}
-                       </div>
-
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="space-y-1.5">
-                             <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">{type === 'INCOME' ? 'Customer' : 'Supplier'}</label>
-                             <input 
-                               type="text"
-                               placeholder="..."
-                               value={partyName}
-                               onChange={(e) => setPartyName(e.target.value)}
-                               className="w-full bg-white border border-slate-100 rounded-xl p-3.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Ref No.</label>
-                             <input 
-                               type="text"
-                               placeholder="..."
-                               value={reference}
-                               onChange={(e) => setReference(e.target.value)}
-                               className="w-full bg-white border border-slate-100 rounded-xl p-3.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
-                             />
-                          </div>
-                       </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Product Selector */}
-                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Link Inventory</label>
-                        <select
-                          value={productId}
-                          onChange={(e) => handleProductChange(e.target.value)}
-                          className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50 appearance-none"
-                        >
-                          <option value="">No link</option>
-                          {products.map(p => (
-                            <option key={p.id} value={p.id}>{p.name} ({p.quantity})</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {productId && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Quantity</label>
+                className="bg-white rounded-t-[2.5rem] p-8 pb-12 animate-in slide-in-from-bottom duration-500 max-h-[90vh] overflow-y-auto no-scrollbar shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.1)] relative z-[10001]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
+                 <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8" />
+                 
+                 <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">New Entry</h2>
+                    <button onClick={() => setIsAdding(false)} className="p-2 text-slate-300">
+                       <X size={24} />
+                    </button>
+                 </div>
+ 
+                 <form onSubmit={handleSubmit} className="space-y-8">
+                   <div className="flex items-center p-1 bg-slate-100 rounded-2xl w-full">
+                     {['INCOME', 'EXPENSE'].map((t) => (
+                       <button
+                         key={t}
+                         type="button"
+                         onClick={() => setType(t as any)}
+                         className={cn(
+                           "flex-1 py-3 text-[13px] font-bold rounded-xl transition-all",
+                           type === t 
+                             ? "bg-white text-blue-600 shadow-sm" 
+                             : "text-slate-500"
+                         )}
+                       >
+                         {t === 'INCOME' ? 'Income' : 'Expense'}
+                       </button>
+                     ))}
+                   </div>
+ 
+                   <div className="space-y-6">
+                     <div className="space-y-2">
+                        <label className="text-[12px] font-bold text-slate-400 px-1">Amount</label>
+                        <div className="relative">
                           <input 
                             type="number" 
-                            inputMode="numeric"
-                            min="1"
-                            value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
-                            className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
-                          />
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
-                          <input 
-                            type="text" 
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            placeholder="e.g., Sale"
-                            className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
+                            inputMode="decimal"
+                            step="0.01"
+                            placeholder="0.00" 
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            onKeyDown={preventInvalidChars}
                             required
+                            className="w-full bg-slate-50 border-none px-6 py-6 rounded-2xl text-3xl font-bold focus:ring-2 focus:ring-blue-100 outline-none"
                           />
+                          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-300">$</span>
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Note</label>
-                          <input 
-                            type="text" 
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="..."
-                            className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
-                          />
+                     </div>
+ 
+                     <div className="space-y-6 bg-slate-50/30 rounded-[2rem] p-2">
+                        <Input 
+                          label="Customer / Entity" 
+                          placeholder="Who is this for?" 
+                          value={partyName}
+                          onChange={(e) => setPartyName(e.target.value)}
+                          className="bg-white border-none px-4 py-4 rounded-xl"
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                             <label className="text-[12px] font-bold text-slate-400 px-1">Category</label>
+                             <input 
+                               type="text" 
+                               value={category}
+                               onChange={(e) => setCategory(e.target.value)}
+                               placeholder="e.g., Business"
+                               className="w-full bg-white border-none p-4 rounded-xl text-[14px] font-medium outline-none focus:ring-2 focus:ring-blue-50"
+                               required
+                             />
+                          </div>
+                          <div className="space-y-2">
+                             <label className="text-[12px] font-bold text-slate-400 px-1">Payment Method</label>
+                             <select
+                               value={paymentMethod}
+                               onChange={(e) => setPaymentMethod(e.target.value)}
+                               className="w-full bg-white border-none p-4 rounded-xl text-[14px] font-medium outline-none focus:ring-2 focus:ring-blue-50"
+                             >
+                               <option value="CASH">Cash</option>
+                               <option value="BANK">Bank Transfer</option>
+                               <option value="CARD">Credit/Debit Card</option>
+                             </select>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <Button 
-                      type="submit" 
-                      isLoading={isLoading}
-                      className="w-full bg-blue-600 text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-100 active:scale-[0.98] transition-all"
-                    >
-                      Save Record
-                    </Button>
-                  </div>
-                </form>
-             </div>
+ 
+                        <Input 
+                          label="Notes (Optional)" 
+                          placeholder="Add details..." 
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          className="bg-white border-none px-4 py-4 rounded-xl"
+                        />
+                     </div>
+                   </div>
+ 
+                   <div className="pt-4">
+                     <Button 
+                       type="submit" 
+                       isLoading={isLoading}
+                       className="w-full bg-blue-600 text-white py-8 rounded-3xl text-sm font-bold shadow-2xl shadow-blue-200 active:scale-95 transition-all"
+                     >
+                       Save Transaction
+                     </Button>
+                   </div>
+                 </form>
+              </div>
           </div>
         )}
       </div>

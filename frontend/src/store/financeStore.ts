@@ -85,8 +85,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     try {
       await api.post('/transactions', data);
       
-      // Clear fetching flags before refreshing to allow updates
-      set({ isFetchingTransactions: false, isFetchingSummary: false });
+      // Refresh data
+      const currentFilters = get().transactions.length > 0 ? undefined : undefined; // Simplified for now
       
       await Promise.all([
         get().fetchTransactions(undefined, true),

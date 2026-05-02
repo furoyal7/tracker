@@ -54,6 +54,13 @@ export default function DebtsPage() {
       setSelectedDebtId(null);
       setPaymentAmount('');
     }
+    setIsAdding(true);
+  };
+
+  const preventInvalidChars = (e: React.KeyboardEvent) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -95,86 +102,65 @@ export default function DebtsPage() {
           ))}
         </div>
 
-        {/* 📒 Debt Card List */}
-        <div className="flex flex-col space-y-4">
+        {/* 📋 Debt Ledger (Telegram Style) */}
+        <div className="flex flex-col bg-white overflow-hidden border-y border-slate-50">
           {filteredDebts.length === 0 && !isLoading ? (
             <div className="py-20 text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">No debt records found</p>
+              <p className="text-[14px] text-slate-400">No debt records found</p>
             </div>
           ) : (
-            filteredDebts.map((debt) => (
+            filteredDebts.map((debt, index) => (
               <div 
                 key={debt.id} 
-                className="bg-white rounded-2xl border-b border-slate-50 p-3 flex flex-col space-y-2.5 transition-all active:bg-slate-50"
+                className={cn(
+                  "flex items-center justify-between px-4 py-3 active:bg-slate-100 transition-colors cursor-pointer",
+                  index !== 0 && "border-t border-slate-50"
+                )}
+                onClick={() => debt.status !== 'PAID' && setSelectedDebtId(debt.id)}
               >
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                       <div className={cn(
-                         "flex h-7 w-7 items-center justify-center rounded-lg",
-                         debt.type === 'RECEIVABLE' ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
-                       )}>
-                          {debt.type === 'RECEIVABLE' ? <CreditCard size={12} strokeWidth={3} /> : <AlertCircle size={12} strokeWidth={3} />}
-                       </div>
-                       <div className="flex flex-col">
-                          <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-tight leading-none">{debt.name}</h4>
-                          <span className={cn(
-                             "text-[6px] font-black uppercase px-2 py-0.5 rounded-full tracking-[0.1em] mt-1 inline-block",
-                             debt.status === 'PAID' ? "bg-emerald-50 text-emerald-600" : 
-                             debt.status === 'OVERDUE' ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-400"
-                          )}>
-                             {debt.status}
-                          </span>
-                       </div>
+                 <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    {/* Left: Status Icon */}
+                    <div className={cn(
+                      "h-12 w-12 rounded-full flex items-center justify-center shrink-0",
+                      debt.type === 'RECEIVABLE' ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                    )}>
+                       {debt.type === 'RECEIVABLE' ? <CreditCard size={20} strokeWidth={2.5} /> : <AlertCircle size={20} strokeWidth={2.5} />}
                     </div>
-                    <div className="text-right">
-                       <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Balance</p>
-                       <p className="text-sm font-black text-blue-600 tabular-nums leading-none">
-                         {formatCurrency(debt.remainingAmount)}
-                       </p>
-                    </div>
-                 </div>
 
-                 <div className="flex items-center justify-between py-2 border-y border-slate-50 px-1">
-                    <div className="flex flex-col">
-                       <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total</span>
-                       <span className="text-[9px] font-bold text-slate-900 leading-none">{formatCurrency(debt.totalAmount)}</span>
+                    {/* Center: Info */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[16px] font-bold text-slate-900 truncate pr-2">{debt.name}</p>
+                        <p className="text-[16px] font-bold text-blue-600 shrink-0">
+                          {formatCurrency(debt.remainingAmount)}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <div className="flex items-center space-x-2">
+                           <span className={cn(
+                             "text-[12px] font-medium",
+                             debt.status === 'PAID' ? "text-emerald-600" : 
+                             debt.status === 'OVERDUE' ? "text-rose-600" : "text-slate-400"
+                           )}>
+                              {debt.status}
+                           </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 shrink-0 italic">
+                          Due: {new Date(debt.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex flex-col text-right">
-                       <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Due Date</span>
-                       <span className="text-[9px] font-bold text-slate-900 italic font-mono leading-none">
-                         {new Date(debt.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                       </span>
-                    </div>
-                 </div>
-
-                 <div className="flex items-center space-x-2">
-                    {debt.phone && (
-                       <a href={`tel:${debt.phone}`} className="flex-initial">
-                          <button className="h-8 px-3 bg-slate-50 text-slate-900 rounded-lg active:scale-95 transition-all outline-none border-none">
-                             <Phone size={12} />
-                          </button>
-                       </a>
-                    )}
-                    
-                    {debt.status !== 'PAID' && (
-                       <button 
-                         onClick={() => setSelectedDebtId(debt.id)}
-                         className="flex-1 h-8 bg-blue-600 active:bg-blue-700 text-white rounded-lg shadow-sm text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all outline-none border-none"
-                       >
-                         Record Payment
-                       </button>
-                    )}
                  </div>
               </div>
             ))
           )}
         </div>
 
-        {/* ➕ FAB for New Debt */}
+        {/* ➕ FAB (Telegram Style) */}
         {!isAdding && (
           <button 
             onClick={() => setIsAdding(true)}
-            className="fixed bottom-24 right-6 z-40 bg-slate-900 text-white p-4 rounded-full shadow-2xl active:scale-95 transition-all outline-none border-none"
+            className="fixed bottom-24 right-6 z-40 bg-blue-600 text-white h-14 w-14 rounded-full shadow-[0_8px_30px_rgba(37,99,235,0.4)] flex items-center justify-center active:scale-90 transition-all border-none animate-in zoom-in duration-300"
           >
             <Plus size={28} strokeWidth={3} />
           </button>
@@ -230,6 +216,7 @@ export default function DebtsPage() {
                         type="number" 
                         value={totalAmount}
                         onChange={(e) => setTotalAmount(e.target.value)}
+                        onKeyDown={preventInvalidChars}
                         required
                         className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
                       />
@@ -271,6 +258,7 @@ export default function DebtsPage() {
                         className="bg-slate-50 border-none text-center text-2xl font-black py-8 rounded-3xl h-24"
                         value={paymentAmount}
                         onChange={(e) => setPaymentAmount(e.target.value)}
+                        onKeyDown={preventInvalidChars}
                         autoFocus
                         required
                       />

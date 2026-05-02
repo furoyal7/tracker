@@ -6,6 +6,7 @@ import { socketService } from '@/services/socket/socket';
 import { toast } from 'sonner';
 import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
+import { ErrorBoundary } from '../common/ErrorBoundary';
 import { MessageSquare } from 'lucide-react';
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
@@ -89,9 +90,9 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
           md:px-10 md:pt-24 
           lg:px-16 lg:max-w-7xl lg:mx-auto">
           
-          <div className="w-full">
+          <ErrorBoundary>
             {children}
-          </div>
+          </ErrorBoundary>
         </main>
       </div>
 
