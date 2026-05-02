@@ -120,6 +120,7 @@ function TransactionsContent() {
       resetForm();
       toast.success(`${type === 'INCOME' ? 'Sale' : 'Expense'} recorded successfully`);
     } catch (err: any) {
+      if (err._isCancelled) return;
       console.error('[TRACE] Submission Failed:', err);
       toast.error(err.message || 'Failed to record entry');
     }

@@ -43,6 +43,10 @@ model Transaction {
   reference     String?
   product   Product?        @relation(fields: [productId], references: [id])
   user      User            @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([date])
+  @@index([type])
 }
 
 model Product {
@@ -57,6 +61,9 @@ model Product {
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]
   saleItems    SaleItem[]
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Debt {
@@ -73,6 +80,10 @@ model Debt {
   phone           String?
   user            User       @relation(fields: [userId], references: [id])
   payments        Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
 }
 
 model Payment {
@@ -172,6 +183,10 @@ model Sale {
   updatedAt       DateTime    @updatedAt
   
   user            User        @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
 }
 
 model SaleItem {
@@ -186,6 +201,9 @@ model SaleItem {
   
   sale            Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
   product         Product? @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
 }
 
 enum SaleStatus {

@@ -34,9 +34,10 @@ export default function ChatListPage() {
 
   const fetchConversations = async () => {
     try {
-      const data = await api.get('/chat/conversations') as any;
-      setConversations(data);
+      const response = await api.get('/chat/conversations') as any;
+      setConversations(response.data || []);
     } catch (error: any) {
+      if (error._isCancelled) return;
       toast.error('Failed to load conversations');
     } finally {
       setLoading(false);
@@ -71,9 +72,10 @@ export default function ChatListPage() {
 
     setCreating(true);
     try {
-      const chat = await api.post('/chat/conversations', { 
+      const response = await api.post('/chat/conversations', { 
         participantId: foundUser.id 
       }) as any;
+      const chat = response.data;
       setNewParticipant('');
       setFoundUser(null);
       setShowNewChat(false);

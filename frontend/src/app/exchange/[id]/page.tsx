@@ -54,6 +54,7 @@ export default function OrderDetails({ params }: { params: Promise<{ id: string 
         setSenderInfo(prev => ({ ...prev, referenceUsed: data.referenceCode }));
       }
     } catch (error: any) {
+      if (error._isCancelled) return;
       toast.error(error.message);
     } finally {
       setLoading(false);
@@ -88,6 +89,7 @@ export default function OrderDetails({ params }: { params: Promise<{ id: string 
       toast.success('Audit session initiated');
       fetchOrder();
     } catch (error: any) {
+      if (error._isCancelled) return;
       toast.error(error.message);
     } finally {
       setUploading(false);

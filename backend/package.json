@@ -10,7 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "postinstall": "npm run prisma:generate",
-    "build": "npm run prisma:generate"
+    "build": "npm run prisma:generate",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +27,7 @@
     "dotenv": "^17.4.2",
     "express": "^4.22.1",
     "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^8.4.1",
     "google-auth-library": "^10.6.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
@@ -34,6 +36,13 @@
     "pg": "^8.20.0",
     "prisma": "^7.7.0",
     "socket.io": "^4.8.3",
+    "winston": "^3.19.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "cross-env": "^10.1.0",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
   }
 }

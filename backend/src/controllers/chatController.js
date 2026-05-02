@@ -1,55 +1,60 @@
 import chatService from '../services/chatService.js';
+import { successResponse } from '../utils/response.js';
+import ApiError from '../utils/ApiError.js';
 
-export const getConversations = async (req, res) => {
+export const getConversations = async (req, res, next) => {
   try {
     const merchantId = req.user.id;
     const conversations = await chatService.getConversations(merchantId);
-    res.json(conversations);
+    return successResponse(res, conversations, 'Conversations retrieved');
   } catch (error) {
-    console.error('Error in getConversations:', error);
-    res.status(500).json({ 
-      message: error.message, 
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
-    });
+    next(error);
   }
 };
 
-export const getMessages = async (req, res) => {
+export const getMessages = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
+    if (!conversationId) throw new ApiError(400, 'Conversation ID is required');
+    
     const messages = await chatService.getMessages(conversationId);
-    res.json(messages);
+    return successResponse(res, messages, 'Messages retrieved');
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const createConversation = async (req, res) => {
+export const createConversation = async (req, res, next) => {
   try {
     const creatorId = req.user.id;
     const { participantId } = req.body;
+    
     if (!participantId) {
-      return res.status(400).json({ message: 'participantId is required' });
+      throw new ApiError(400, 'participantId is required');
     }
+    
     if (creatorId === participantId) {
-      return res.status(400).json({ message: 'Cannot chat with yourself' });
+      throw new ApiError(400, 'Cannot chat with yourself');
     }
+    
     const conversation = await chatService.createConversation(creatorId, participantId);
-    res.json(conversation);
+    return successResponse(res, conversation, 'Conversation created', 201);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-export const getConversation = async (req, res) => {
+export const getConversation = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
+    if (!conversationId) throw new ApiError(400, 'Conversation ID is required');
+
     const conversation = await chatService.getConversation(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: 'Conversation not found' });
+      throw new ApiError(404, 'Conversation not found');
     }
-    res.json(conversation);
+    return successResponse(res, conversation, 'Conversation retrieved');
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };

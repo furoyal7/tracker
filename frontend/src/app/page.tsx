@@ -1,6 +1,5 @@
 'use client';
-// Routing Pulse - Cleared for Dashboard Entry
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { DashboardSummary } from '@/features/dashboard/DashboardSummary';
 import { useFinanceStore } from '@/store/financeStore';
@@ -12,46 +11,59 @@ import { FinancialChart } from '@/features/dashboard/FinancialChart';
 import Link from 'next/link';
 import exchangeService from '@/services/exchangeService';
 import { ExchangeOrder } from '@/types';
-import { ArrowRight, Repeat, Clock, ShieldCheck } from 'lucide-react';
-import { cn } from '@/utils/cn';
+import { Repeat, Clock, ShieldCheck } from 'lucide-react';
 
 export default function DashboardPage() {
   const { fetchSummary, fetchTransactions } = useFinanceStore();
   const { fetchProducts } = useInventoryStore();
   const { isAuthenticated } = useAuthStore();
   const [activeSession, setActiveSession] = React.useState<ExchangeOrder | null>(null);
+  const isSyncing = useRef(false);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    fetchSummary();
-    fetchTransactions();
-    fetchProducts();
+    if (!isAuthenticated || isSyncing.current) return;
     
-    // Check for active exchange sessions
-    const checkExchange = async () => {
+    const controller = new AbortController();
+    isSyncing.current = true;
+
+    const initDashboard = async () => {
       try {
+        await Promise.all([
+          fetchSummary(),
+          fetchTransactions(),
+          fetchProducts()
+        ]);
+
+        // Check for active exchange sessions
         const response: any = await exchangeService.getUserOrders();
-        const active = response.data?.find((o: any) => 
-          ['pending', 'proof_uploaded', 'under_review', 'ready_for_confirmation', 'confirmed'].includes(o.status)
-        );
-        if (active) setActiveSession(active);
-      } catch (e: any) {
-        // Silently fail for exchange pulse if it's just a connection or auth issue
-        // The main finance fetch will handle show/hide of components
-        if (process.env.NODE_ENV === 'development') {
-          console.debug('Exchange Pulse sync deferred');
+        if (!controller.signal.aborted) {
+          const active = response.data?.find((o: any) => 
+            ['pending', 'proof_uploaded', 'under_review', 'ready_for_confirmation', 'confirmed'].includes(o.status)
+          );
+          if (active) setActiveSession(active);
         }
+      } catch (e: any) {
+        if (!controller.signal.aborted) {
+          console.error('[Dashboard] Sync failed:', e.message);
+        }
+      } finally {
+        isSyncing.current = false;
       }
     };
-    checkExchange();
+
+    initDashboard();
+
+    return () => {
+      controller.abort();
+      isSyncing.current = false;
+    };
   }, [fetchSummary, fetchTransactions, fetchProducts, isAuthenticated]);
 
   return (
     <MainLayout>
       <div className="flex flex-col space-y-10">
         
-        {/* 📊 Financial Summary (Elite Standard) */}
+        {/* 📊 Financial Summary */}
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Financial Pulse</h3>

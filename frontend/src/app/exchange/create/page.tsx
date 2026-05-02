@@ -33,6 +33,7 @@ export default function CreateExchangeOrder() {
       toast.success('Order session initialized');
       router.push(`/exchange/${response.data.id}`);
     } catch (error: any) {
+      if (error._isCancelled) return;
       toast.error(error.message);
     } finally {
       setLoading(false);

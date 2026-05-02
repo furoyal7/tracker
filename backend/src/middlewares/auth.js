@@ -1,44 +1,51 @@
 import { verifyToken } from '../utils/jwt.js';
 import { errorResponse } from '../utils/response.js';
 import prisma from '../lib/prisma.js';
+import ApiError from '../utils/ApiError.js';
 
 export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return errorResponse(res, 'Unauthorized - No token provided', 401);
+      throw new ApiError(401, 'Unauthorized - No token provided');
     }
 
     const token = authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') {
+      throw new ApiError(401, 'Unauthorized - Invalid token format');
+    }
+
     let decoded;
-    
     try {
       decoded = verifyToken(token);
     } catch (jwtError) {
-      console.error('Authentication failed: Invalid token', jwtError.message);
-      return errorResponse(res, 'Unauthorized - Invalid token', 401);
+      console.warn(`[AUTH] Invalid token attempt from ${req.ip}: ${jwtError.message}`);
+      throw new ApiError(401, 'Unauthorized - Invalid or expired token');
     }
     
-    console.log('Authenticating user with ID:', decoded.id);
-
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-      });
-
-      if (!user) {
-        console.warn('Authentication failed: User not found for ID', decoded.id);
-        return errorResponse(res, 'Unauthorized - User not found', 401);
-      }
-
-      req.user = user;
-      next();
-    } catch (dbError) {
-      console.error('Database connection error during authentication:', dbError.message);
-      return errorResponse(res, 'Internal Server Error - Database unreachable', 500);
+    if (!decoded || !decoded.id) {
+      throw new ApiError(401, 'Unauthorized - Token payload missing user ID');
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        passcode: true,
+      }
+    });
+
+    if (!user) {
+      console.warn(`[AUTH] User not found for ID: ${decoded.id}`);
+      throw new ApiError(401, 'Unauthorized - User no longer exists');
+    }
+
+    req.user = user;
+    next();
   } catch (error) {
-    console.error('Unexpected error in auth middleware:', error.message);
-    return errorResponse(res, 'Internal Server Error', 500);
+    next(error);
   }
 };

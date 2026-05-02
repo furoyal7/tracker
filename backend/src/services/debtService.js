@@ -1,13 +1,17 @@
 import prisma from '../lib/prisma.js';
+import ApiError from '../utils/ApiError.js';
 
 export const createDebt = async (userId, debtData) => {
-  const { dueDate, ...rest } = debtData;
+  const { dueDate, totalAmount, ...rest } = debtData;
+  if (totalAmount <= 0) throw new ApiError(400, 'Total amount must be greater than zero');
+
   return prisma.debt.create({
     data: {
       ...rest,
+      totalAmount: parseFloat(totalAmount),
       dueDate: new Date(dueDate),
       userId,
-      remainingAmount: debtData.totalAmount,
+      remainingAmount: parseFloat(totalAmount),
     },
   });
 };
@@ -33,13 +37,15 @@ export const getDebts = async (userId, filters = {}) => {
 };
 
 export const getDebtById = async (userId, id) => {
+  if (!id) throw new ApiError(400, 'Debt ID is required');
+
   const debt = await prisma.debt.findFirst({
     where: { id, userId },
     include: { payments: true },
   });
 
   if (!debt) {
-    throw new Error('Debt not found');
+    throw new ApiError(404, 'Debt not found');
   }
 
   return debt;
@@ -48,9 +54,6 @@ export const getDebtById = async (userId, id) => {
 export const updateDebt = async (userId, id, updateData) => {
   const debt = await getDebtById(userId, id);
 
-  // If totalAmount is updated, we might need to recalculate remainingAmount
-  // but usually it's better to keep it simple unless payments exist.
-  
   return prisma.debt.update({
     where: { id: debt.id },
     data: updateData,
@@ -65,26 +68,31 @@ export const deleteDebt = async (userId, id) => {
   });
 };
 
-export const updateDebtStatus = async (debtId) => {
-  const debt = await prisma.debt.findUnique({
+export const updateDebtStatus = async (debtId, tx = prisma) => {
+  const debt = await tx.debt.findUnique({
     where: { id: debtId },
     include: { payments: true },
   });
 
-  const totalPaid = debt.payments.reduce((sum, p) => sum + p.amount, 0);
-  const remainingAmount = Math.max(0, debt.totalAmount - totalPaid);
+  if (!debt) throw new ApiError(404, `Debt ${debtId} not found`);
+
+  const totalPaid = debt.payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+  const remainingAmount = Math.max(0, parseFloat(debt.totalAmount) - totalPaid);
   
   let status = debt.status;
-  if (remainingAmount === 0) {
+  if (remainingAmount <= 0.01) { // Floating point safety
     status = 'PAID';
-  } else if (new Date(debt.dueDate) < new Date()) {
+  } else if (new Date(debt.dueDate) < new Date() && status !== 'PAID') {
     status = 'OVERDUE';
   } else {
     status = 'UNPAID';
   }
 
-  return prisma.debt.update({
+  return tx.debt.update({
     where: { id: debtId },
-    data: { remainingAmount, status },
+    data: { 
+      remainingAmount: parseFloat(remainingAmount.toFixed(2)), 
+      status 
+    },
   });
 };

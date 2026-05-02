@@ -1,170 +1,156 @@
 import prisma from '../lib/prisma.js';
-import { startOfDay, subDays, endOfDay } from 'date-fns';
+import { startOfDay, subDays, endOfDay, format } from 'date-fns';
+import ApiError from '../utils/ApiError.js';
 
 export const getFinancialSummary = async (userId) => {
   const now = new Date();
   const todayStart = startOfDay(now);
+  const todayEnd = endOfDay(now);
   const yesterdayStart = startOfDay(subDays(now, 1));
+  const yesterdayEnd = endOfDay(subDays(now, 1));
   const sevenDaysAgo = startOfDay(subDays(now, 7));
 
-  // 1. Fetch all relevant data
-  const [allTransactions, debts] = await Promise.all([
-    prisma.transaction.findMany({ where: { userId } }),
-    prisma.debt.findMany({ where: { userId }, include: { payments: true } }),
-  ]);
+  try {
+    // 1. Efficient Aggregations using Prisma
+    const [totals, dailyTotals, debtTotals, productsCount] = await Promise.all([
+      // Total Income & Expense
+      prisma.transaction.groupBy({
+        by: ['type'],
+        where: { userId },
+        _sum: { amount: true },
+      }),
+      // Today vs Yesterday Totals
+      prisma.transaction.groupBy({
+        by: ['type', 'date'],
+        where: { 
+          userId,
+          date: { gte: yesterdayStart, lte: todayEnd }
+        },
+        _sum: { amount: true },
+      }),
+      // Debt Totals
+      prisma.debt.groupBy({
+        by: ['type'],
+        where: { userId },
+        _sum: { remainingAmount: true },
+      }),
+      // Inventory stats
+      prisma.product.count({ where: { userId, quantity: 0 } }),
+    ]);
 
-  // 2. Basic Totals
-  const totalIncome = allTransactions
-    .filter((t) => t.type === 'INCOME')
-    .reduce((sum, t) => sum + t.amount, 0);
+    // 2. Process Basic Totals
+    const totalIncome = totals.find(t => t.type === 'INCOME')?._sum.amount || 0;
+    const totalExpense = totals.find(t => t.type === 'EXPENSE')?._sum.amount || 0;
 
-  const totalExpense = allTransactions
-    .filter((t) => t.type === 'EXPENSE')
-    .reduce((sum, t) => sum + t.amount, 0);
+    const totalReceivable = debtTotals.find(d => d.type === 'RECEIVABLE')?._sum.remainingAmount || 0;
+    const totalPayable = debtTotals.find(d => d.type === 'PAYABLE')?._sum.remainingAmount || 0;
 
-  const totalReceivable = debts
-    .filter((d) => d.type === 'RECEIVABLE')
-    .reduce((sum, d) => sum + d.remainingAmount, 0);
+    // 3. Trends (Today vs Yesterday)
+    const incomeToday = dailyTotals.filter(t => t.type === 'INCOME' && new Date(t.date) >= todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
+    const incomeYesterday = dailyTotals.filter(t => t.type === 'INCOME' && new Date(t.date) >= yesterdayStart && new Date(t.date) < todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
+    const expenseToday = dailyTotals.filter(t => t.type === 'EXPENSE' && new Date(t.date) >= todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
+    const expenseYesterday = dailyTotals.filter(t => t.type === 'EXPENSE' && new Date(t.date) >= yesterdayStart && new Date(t.date) < todayStart).reduce((s, t) => s + (t._sum.amount || 0), 0);
 
-  // 3. Today vs Yesterday (Trends)
-  const getDailyTotal = (txs, day, type) => 
-    txs.filter(t => t.type === type && new Date(t.date) >= startOfDay(day) && new Date(t.date) <= endOfDay(day))
-       .reduce((sum, t) => sum + t.amount, 0);
-
-  const incomeToday = getDailyTotal(allTransactions, todayStart, 'INCOME');
-  const incomeYesterday = getDailyTotal(allTransactions, yesterdayStart, 'INCOME');
-  const expenseToday = getDailyTotal(allTransactions, todayStart, 'EXPENSE');
-  const expenseYesterday = getDailyTotal(allTransactions, yesterdayStart, 'EXPENSE');
-
-  const calculateChange = (current, previous) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return Math.round(((current - previous) / previous) * 100);
-  };
-
-  // 4. Historical Chart Data (Last 7 Days)
-  const chartData = Array.from({ length: 7 }).map((_, i) => {
-    const date = subDays(todayStart, 6 - i);
-    return {
-      name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      income: getDailyTotal(allTransactions, date, 'INCOME'),
-      expense: getDailyTotal(allTransactions, date, 'EXPENSE'),
+    const calculateChange = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
     };
-  });
 
-  // 5. Smart Insights
-  const insights = [];
-  
-  // Overdue debts
-  const overdueCount = debts.filter(d => d.status === 'OVERDUE').length;
-  if (overdueCount > 0) {
-    insights.push(`You have ${overdueCount} overdue debt${overdueCount > 1 ? 's' : ''} that need attention.`);
-  }
+    // 4. Historical Chart Data (Last 7 Days) - Optimized fetch
+    const historicalTxs = await prisma.transaction.findMany({
+      where: { 
+        userId,
+        date: { gte: sevenDaysAgo }
+      },
+      select: { amount: true, type: true, date: true }
+    });
 
-  // Top debtor
-  const topDebtor = [...debts]
-    .filter(d => d.type === 'RECEIVABLE')
-    .sort((a, b) => b.remainingAmount - a.remainingAmount)[0];
-  if (topDebtor && topDebtor.remainingAmount > 0) {
-    insights.push(`${topDebtor.name} owes you the most: $${topDebtor.remainingAmount.toLocaleString()}.`);
-  }
+    const chartData = Array.from({ length: 7 }).map((_, i) => {
+      const date = subDays(todayStart, 6 - i);
+      const dayStart = startOfDay(date);
+      const dayEnd = endOfDay(date);
+      
+      const dayIncome = historicalTxs
+        .filter(t => t.type === 'INCOME' && new Date(t.date) >= dayStart && new Date(t.date) <= dayEnd)
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      const dayExpense = historicalTxs
+        .filter(t => t.type === 'EXPENSE' && new Date(t.date) >= dayStart && new Date(t.date) <= dayEnd)
+        .reduce((sum, t) => sum + t.amount, 0);
 
-  // 6. Inventory Insights
-  const lowStockProducts = await prisma.product.findMany({
-    where: { 
-      userId,
-      quantity: { lte: 5, gt: 0 } 
+      return {
+        name: format(date, 'EEE'),
+        income: dayIncome,
+        expense: dayExpense,
+      };
+    });
+
+    // 5. Smart Insights
+    const insights = [];
+    
+    // Overdue debts
+    const overdueCount = await prisma.debt.count({ where: { userId, status: 'OVERDUE' } });
+    if (overdueCount > 0) {
+      insights.push(`You have ${overdueCount} overdue debt${overdueCount > 1 ? 's' : ''} that need attention.`);
     }
-  });
 
-  const outOfStockCount = await prisma.product.count({
-    where: { userId, quantity: 0 }
-  });
+    // Inventory Insights
+    if (productsCount > 0) {
+      insights.push(`Danger! ${productsCount} items are completely out of stock.`);
+    }
 
-  if (outOfStockCount > 0) {
-    insights.push(`Danger! ${outOfStockCount} items are completely out of stock.`);
+    const lowStockCount = await prisma.product.count({
+      where: { userId, quantity: { lte: 5, gt: 0 } }
+    });
+    if (lowStockCount > 0) {
+      insights.push(`Restock Alert: ${lowStockCount} items are running low.`);
+    }
+
+    // 6. Distribution & Sales (Top Categories/Products)
+    // For distribution, we can still use findMany but limit it or use more specific queries
+    const recentTxs = await prisma.transaction.findMany({
+      where: { userId },
+      orderBy: { date: 'desc' },
+      take: 1000 // Limit for in-memory analysis of distribution
+    });
+
+    const getDistribution = (type) => {
+      const filtered = recentTxs.filter(t => t.type === type);
+      const total = filtered.reduce((sum, t) => sum + t.amount, 0);
+      const distribution = filtered.reduce((acc, t) => {
+        acc[t.category] = (acc[t.category] || 0) + t.amount;
+        return acc;
+      }, {});
+
+      return Object.entries(distribution)
+        .map(([label, value]) => ({
+          label,
+          value: total > 0 ? Math.round((value / total) * 100) : 0,
+          amount: value
+        }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+    };
+
+    return {
+      totalIncome,
+      totalExpense,
+      profit: totalIncome - totalExpense,
+      profitMargin: totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0,
+      totalReceivable,
+      totalPayable,
+      trends: {
+        incomeChange: calculateChange(incomeToday, incomeYesterday),
+        expenseChange: calculateChange(expenseToday, expenseYesterday),
+        incomeToday,
+        expenseToday
+      },
+      chartData,
+      insights,
+      incomeDistribution: getDistribution('INCOME'),
+      expenseDistribution: getDistribution('EXPENSE'),
+    };
+  } catch (error) {
+    throw new ApiError(500, `Failed to generate report: ${error.message}`);
   }
-
-  if (lowStockProducts.length > 0) {
-    insights.push(`Restock Alert: ${lowStockProducts.length} items are running low (under 5 units).`);
-  }
-
-  // Expense spike
-  const weeklyExpense = allTransactions
-    .filter(t => t.type === 'EXPENSE' && new Date(t.date) >= sevenDaysAgo)
-    .reduce((sum, t) => sum + t.amount, 0);
-  const prevWeeklyExpense = allTransactions
-    .filter(t => t.type === 'EXPENSE' && new Date(t.date) < sevenDaysAgo && new Date(t.date) >= subDays(sevenDaysAgo, 7))
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const expenseSpike = calculateChange(weeklyExpense, prevWeeklyExpense);
-  if (expenseSpike > 15) {
-    insights.push(`Your weekly expenses increased by ${expenseSpike}% compared to last week.`);
-  }
-
-  // 7. Category Distribution
-  const getCategoryDistribution = (txs, type) => {
-    const filtered = txs.filter(t => t.type === type);
-    const total = filtered.reduce((sum, t) => sum + t.amount, 0);
-    const distribution = filtered.reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {});
-
-    return Object.entries(distribution)
-      .map(([label, value]) => ({
-        label,
-        value: Math.round((value / total) * 100) || 0,
-        amount: value
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5); // Top 5 categories
-  };
-
-  const incomeDistribution = getCategoryDistribution(allTransactions, 'INCOME');
-  const expenseDistribution = getCategoryDistribution(allTransactions, 'EXPENSE');
-
-  // 8. Top Selling Products
-  const productSales = allTransactions
-    .filter(t => t.type === 'INCOME' && t.productId)
-    .reduce((acc, t) => {
-      if (!acc[t.productId]) {
-        acc[t.productId] = { id: t.productId, quantity: 0, revenue: 0 };
-      }
-      acc[t.productId].quantity += (t.quantity || 1);
-      acc[t.productId].revenue += t.amount;
-      return acc;
-    }, {});
-
-  const products = await prisma.product.findMany({
-    where: { id: { in: Object.keys(productSales) } },
-    select: { id: true, name: true }
-  });
-
-  const topSellingProducts = Object.values(productSales)
-    .map(sale => ({
-      ...sale,
-      name: products.find(p => p.id === sale.id)?.name || 'Unknown Product'
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 4);
-
-  return {
-    totalIncome,
-    totalExpense,
-    profit: totalIncome - totalExpense,
-    profitMargin: totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0,
-    totalReceivable,
-    totalPayable: debts.filter(d => d.type === 'PAYABLE').reduce((sum, d) => sum + d.remainingAmount, 0),
-    trends: {
-      incomeChange: calculateChange(incomeToday, incomeYesterday),
-      expenseChange: calculateChange(expenseToday, expenseYesterday),
-      incomeToday,
-      expenseToday
-    },
-    chartData,
-    insights,
-    incomeDistribution,
-    expenseDistribution,
-    topSellingProducts
-  };
 };

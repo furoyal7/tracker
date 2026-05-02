@@ -13,18 +13,27 @@ import { useFinanceStore } from '@/store/financeStore';
 
 export const FinancialChart = () => {
   const { summary } = useFinanceStore();
+  const [isMounted, setIsMounted] = React.useState(false);
   const data = summary?.chartData || [];
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <div className="w-full h-[350px] mt-6 bg-slate-50/50 animate-pulse rounded-3xl" />;
+  }
 
   if (data.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-slate-400">
+      <div className="flex h-[350px] mt-6 items-center justify-center text-slate-400 border border-dashed border-slate-100 rounded-3xl">
         No performance data available
       </div>
     );
   }
 
   return (
-    <div className="w-full h-[350px] mt-6 relative">
+    <div className="w-full h-[350px] mt-6 relative" style={{ minWidth: '100%' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>

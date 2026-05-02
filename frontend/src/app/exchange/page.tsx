@@ -20,6 +20,7 @@ export default function ExchangeOrdersList() {
       const response: any = await exchangeService.getUserOrders();
       setOrders(response.data || []);
     } catch (error: any) {
+      if (error._isCancelled) return;
       toast.error(error.message);
     } finally {
       setLoading(false);

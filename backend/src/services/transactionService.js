@@ -1,59 +1,43 @@
 import prisma from '../lib/prisma.js';
-
 import * as productService from './productService.js';
+import ApiError from '../utils/ApiError.js';
 
 export const createTransaction = async (userId, transactionData) => {
-  console.log('[TRACE] Service - Database Operation Starting for user:', userId);
-  const { productId, quantity = 1, ...rest } = transactionData;
+  const { productId, quantity = 0, amount, type, ...rest } = transactionData;
+
+  if (amount < 0) throw new ApiError(400, 'Amount cannot be negative');
+  if (productId && quantity < 0) throw new ApiError(400, 'Quantity cannot be negative');
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx) => {
       // If a product is linked, adjust stock
-      if (productId && transactionData.type === 'INCOME') {
-        console.log('[DEBUG] Linking product and checking stock:', productId);
-        const product = await tx.product.findUnique({ where: { id: productId } });
-        
-        if (!product) {
-          console.error('[ERROR] Product not found:', productId);
-          throw new Error('Product not found');
-        }
-        
-        if (product.quantity < quantity) {
-          console.error('[ERROR] Insufficient stock:', { product: product.name, current: product.quantity, requested: quantity });
-          throw new Error(`Insufficient stock for ${product.name}`);
-        }
-
-        await tx.product.update({
-          where: { id: productId },
-          data: { quantity: { decrement: quantity } },
-        });
-        console.log('[DEBUG] Stock updated successfully');
+      if (productId && type === 'INCOME') {
+        await productService.adjustStock(productId, quantity, tx);
       }
 
       const transaction = await tx.transaction.create({
         data: {
           ...rest,
+          amount: parseFloat(amount),
+          type,
           date: rest.date ? new Date(rest.date) : new Date(),
           productId,
-          quantity,
+          quantity: parseInt(quantity),
           userId,
         },
       });
       
-      console.log('[DEBUG] Transaction record created in DB:', transaction.id);
       return transaction;
     });
-
-    return result;
   } catch (error) {
-    console.error('[CRITICAL ERROR] Transaction creation failed:', error);
-    throw error;
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, `Transaction failed: ${error.message}`);
   }
 };
 
 
 export const getTransactions = async (userId, filters = {}) => {
-  const { type, category, startDate, endDate, skip = 0, take = 10 } = filters;
+  const { type, category, startDate, endDate, skip = 0, take = 20 } = filters;
 
   const where = {
     userId,
@@ -71,8 +55,8 @@ export const getTransactions = async (userId, filters = {}) => {
     prisma.transaction.findMany({
       where,
       orderBy: { date: 'desc' },
-      skip: parseInt(skip),
-      take: parseInt(take),
+      skip: Math.max(0, parseInt(skip) || 0),
+      take: Math.min(100, parseInt(take) || 20),
     }),
     prisma.transaction.count({ where }),
   ]);
@@ -81,12 +65,14 @@ export const getTransactions = async (userId, filters = {}) => {
 };
 
 export const getTransactionById = async (userId, id) => {
+  if (!id) throw new ApiError(400, 'Transaction ID is required');
+
   const transaction = await prisma.transaction.findFirst({
     where: { id, userId },
   });
 
   if (!transaction) {
-    throw new Error('Transaction not found');
+    throw new ApiError(404, 'Transaction not found');
   }
 
   return transaction;
@@ -95,9 +81,16 @@ export const getTransactionById = async (userId, id) => {
 export const updateTransaction = async (userId, id, updateData) => {
   const transaction = await getTransactionById(userId, id);
 
+  if (updateData.amount !== undefined && updateData.amount < 0) {
+    throw new ApiError(400, 'Amount cannot be negative');
+  }
+
   return prisma.transaction.update({
     where: { id: transaction.id },
-    data: updateData,
+    data: {
+      ...updateData,
+      ...(updateData.amount !== undefined && { amount: parseFloat(updateData.amount) }),
+    },
   });
 };
 

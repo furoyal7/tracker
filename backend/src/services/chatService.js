@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma.js';
+import ApiError from '../utils/ApiError.js';
 
 class ChatService {
   async getConversations(userId) {
@@ -58,6 +59,18 @@ class ChatService {
   }
 
   async saveMessage(conversationId, senderId, text) {
+    if (!conversationId || !senderId || !text) {
+      throw new ApiError(400, 'Missing message data');
+    }
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId }
+    });
+
+    if (!conversation) {
+      throw new ApiError(404, 'Conversation not found');
+    }
+
     const message = await prisma.message.create({
       data: { conversationId, senderId, text }
     });

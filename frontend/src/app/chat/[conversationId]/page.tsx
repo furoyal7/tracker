@@ -23,14 +23,17 @@ export default function ChatRoomPage() {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
-        const history = await api.get(`/chat/messages/${conversationId}`) as any;
-        setMessages(history);
+        const historyRes = await api.get(`/chat/messages/${conversationId}`) as any;
+        setMessages(historyRes.data || []);
         
         // Fetch conversation details to get participant name
-        const chat = await api.get(`/chat/conversations/${conversationId}`) as any;
+        const chatRes = await api.get(`/chat/conversations/${conversationId}`) as any;
+        const chat = chatRes.data;
         if (chat) {
           const otherUser = chat.creatorId === currentUserId ? chat.participant : chat.creator;
-          setParticipantName(otherUser.name || otherUser.username);
+          if (otherUser) {
+            setParticipantName(otherUser.name || otherUser.username);
+          }
         }
       } catch (error) {
         toast.error('Failed to load chat history');

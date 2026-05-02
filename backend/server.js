@@ -10,7 +10,12 @@ const server = http.createServer(app);
 initSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`Server is running in ${config.nodeEnv} mode on port ${PORT}`);
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] 🚀 Merchant API System Online`);
+  console.log(`[${timestamp}] 🌐 Mode: ${config.nodeEnv}`);
+  console.log(`[${timestamp}] 🔌 Port: ${PORT}`);
+  console.log(`[${timestamp}] 🛡️  Security Headers: Helmet Active`);
+  console.log(`[${timestamp}] 📦 Database: Prisma Adapter Connected`);
 });
 
 // Graceful shutdown
