@@ -15,7 +15,7 @@ export default function ChatRoomPage() {
   const { user } = useAuthStore();
   const currentUserId = user?.id || '';
 
-  const { messages, setMessages, sendMessage } = useChat(
+  const { messages, setMessages, sendMessage, isTyping, sendTyping } = useChat(
     conversationId as string,
     currentUserId
   );
@@ -62,6 +62,8 @@ export default function ChatRoomPage() {
       currentUserId={currentUserId}
       messages={messages}
       onSendMessage={sendMessage}
+      onTyping={sendTyping}
+      isTyping={isTyping}
     />
   );
 }

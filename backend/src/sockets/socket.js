@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import chatService from '../services/chatService.js';
 import prisma from '../lib/prisma.js';
 import { config } from '../config/env.js';
+import { verifyToken } from '../utils/jwt.js';
 
 const initSocket = (server) => {
   const io = new Server(server, {
@@ -11,56 +12,91 @@ const initSocket = (server) => {
         : config.frontendUrl.split(',').map(url => url.trim()),
       methods: ["GET", "POST"],
       credentials: true
+    },
+    pingTimeout: 60000,
+  });
+
+  // Authentication Middleware for Sockets
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+      
+      if (!token) {
+        return next(new Error('Authentication error: No token provided'));
+      }
+
+      const decoded = verifyToken(token);
+      if (!decoded || !decoded.id) {
+        return next(new Error('Authentication error: Invalid token'));
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, username: true, name: true }
+      });
+
+      if (!user) {
+        return next(new Error('Authentication error: User not found'));
+      }
+
+      socket.user = user;
+      socket.userId = user.id;
+      next();
+    } catch (error) {
+      next(new Error('Authentication error: ' + error.message));
     }
   });
 
   io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
+    const userId = socket.userId;
+    console.log(`User connected: ${userId} (${socket.id})`);
 
-    // Attach userId to socket if provided via auth handshake
-    const userId = socket.handshake.auth.userId;
-    if (userId) {
-      socket.userId = userId;
-      socket.join(userId); // Join personal room for global notifications
-      console.log(`User ${userId} joined their personal room`);
-    }
+    // Join personal room for global events (new chat requests, etc.)
+    socket.join(userId);
 
     socket.on('join_conversation', (conversationId) => {
       socket.join(conversationId);
-      console.log(`User ${socket.id} joined conversation: ${conversationId}`);
+      console.log(`User ${userId} joined room: ${conversationId}`);
     });
 
-    socket.on('send_message', async ({ conversationId, senderId, text }) => {
-      try {
-        const message = await chatService.saveMessage(conversationId, senderId, text);
-        
-        // Fetch sender info for better notification
-        const sender = await prisma.user.findUnique({
-          where: { id: senderId },
-          select: { username: true, name: true, avatarUrl: true }
-        });
+    socket.on('leave_conversation', (conversationId) => {
+      socket.leave(conversationId);
+      console.log(`User ${userId} left room: ${conversationId}`);
+    });
 
-        // Broadcast to the specific conversation room
+    socket.on('send_message', async ({ conversationId, text }) => {
+      try {
+        if (!text?.trim()) return;
+
+        const message = await chatService.saveMessage(conversationId, userId, text);
+        
         const messageWithSender = {
           ...message,
-          senderName: sender?.name || sender?.username || 'Someone'
+          senderName: socket.user.name || socket.user.username || 'Someone'
         };
 
+        // 1. Send to all users currently in the conversation room
         io.to(conversationId).emit('receive_message', messageWithSender);
 
-        // Also notify the recipient globally if they aren't in the room
+        // 2. Notify the other participant globally (for notifications/list updates)
         const conversation = await chatService.getConversation(conversationId);
         if (conversation) {
-          const recipientId = conversation.creatorId === senderId ? conversation.participantId : conversation.creatorId;
-          io.to(recipientId).emit('receive_message', messageWithSender);
+          const recipientId = conversation.creatorId === userId ? conversation.participantId : conversation.creatorId;
+          // Only send if recipient isn't already in the specific room (optional optimization)
+          socket.to(recipientId).emit('receive_message', messageWithSender);
         }
       } catch (error) {
-        console.error('Error saving message:', error);
+        console.error('[Socket] Error saving message:', error);
+        socket.emit('error', { message: 'Failed to send message' });
       }
     });
 
+    socket.on('typing', ({ conversationId }) => {
+      socket.to(conversationId).emit('user_typing', { userId, conversationId });
+    });
+
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+      console.log(`User disconnected: ${userId}`);
     });
   });
 

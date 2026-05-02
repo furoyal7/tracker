@@ -18,6 +18,8 @@ interface ChatScreenProps {
   currentUserId: string;
   messages: Message[];
   onSendMessage: (text: string) => void;
+  onTyping?: () => void;
+  isTyping?: boolean;
 }
 
 export default function ChatScreen({
@@ -26,6 +28,8 @@ export default function ChatScreen({
   currentUserId,
   messages,
   onSendMessage,
+  onTyping,
+  isTyping,
 }: ChatScreenProps) {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -58,7 +62,11 @@ export default function ChatScreen({
         </div>
         <div className="flex-1">
           <h2 className="font-semibold text-lg leading-tight">{participantName}</h2>
-          <p className="text-xs text-green-100">online</p>
+          {isTyping ? (
+            <p className="text-xs text-green-300 animate-pulse font-medium">typing...</p>
+          ) : (
+            <p className="text-xs text-green-100">online</p>
+          )}
         </div>
       </div>
 
@@ -105,7 +113,10 @@ export default function ChatScreen({
           <input
             type="text"
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              onTyping?.();
+            }}
             placeholder="Type a message"
             className="flex-1 bg-white px-4 py-2 rounded-full text-sm outline-none border border-gray-200 focus:border-[#25d366]"
           />

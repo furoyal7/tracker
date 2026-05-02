@@ -9,26 +9,37 @@ if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' &&
 class SocketService {
   private socket: Socket | null = null;
 
-  connect(userId?: string) {
-    if (this.socket) return this.socket;
+  connect() {
+    if (this.socket?.connected) return this.socket;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
     this.socket = io(SOCKET_URL, {
-      auth: { userId },
+      auth: { token },
       reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     this.socket.on('connect', () => {
-      console.log('Connected to socket server');
+      console.log('[Socket] Connected to server');
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from socket server');
+    this.socket.on('disconnect', (reason) => {
+      console.log('[Socket] Disconnected:', reason);
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('[Socket] Connection error:', error.message);
     });
 
     return this.socket;
   }
 
   getSocket() {
+    if (!this.socket?.connected) {
+      return this.connect();
+    }
     return this.socket;
   }
 

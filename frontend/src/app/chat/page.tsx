@@ -24,11 +24,15 @@ export default function ChatListPage() {
   useEffect(() => {
     // Connect socket to receive real-time updates for the list
     if (user?.id) {
-      const socket = socketService.connect(user.id);
+      const socket = socketService.connect();
       socket.on('receive_message', () => {
         // Refresh list when new messages arrive
         fetchConversations();
       });
+      
+      return () => {
+        socket.off('receive_message');
+      };
     }
   }, [user]);
 
