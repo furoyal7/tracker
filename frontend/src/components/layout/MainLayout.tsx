@@ -26,7 +26,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (isAuthenticated && user?.id) {
-      const socket = socketService.connect(user.id);
+      const socket = socketService.connect();
       
       const handleNewMessage = (message: any) => {
         // Only show notification if:

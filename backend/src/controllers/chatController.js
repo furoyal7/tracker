@@ -15,7 +15,17 @@ export const getConversations = async (req, res, next) => {
 export const getMessages = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
+    const userId = req.user.id;
+    
     if (!conversationId) throw new ApiError(400, 'Conversation ID is required');
+    
+    // Privacy Check: Verify user belongs to this conversation
+    const conversation = await chatService.getConversation(conversationId);
+    if (!conversation) throw new ApiError(404, 'Conversation not found');
+    
+    if (conversation.creatorId !== userId && conversation.participantId !== userId) {
+      throw new ApiError(403, 'Unauthorized to view this conversation');
+    }
     
     const messages = await chatService.getMessages(conversationId);
     return successResponse(res, messages, 'Messages retrieved');
@@ -47,12 +57,20 @@ export const createConversation = async (req, res, next) => {
 export const getConversation = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
+    const userId = req.user.id;
+
     if (!conversationId) throw new ApiError(400, 'Conversation ID is required');
 
     const conversation = await chatService.getConversation(conversationId);
     if (!conversation) {
       throw new ApiError(404, 'Conversation not found');
     }
+
+    // Privacy Check
+    if (conversation.creatorId !== userId && conversation.participantId !== userId) {
+      throw new ApiError(403, 'Unauthorized to view this conversation');
+    }
+
     return successResponse(res, conversation, 'Conversation retrieved');
   } catch (error) {
     next(error);
