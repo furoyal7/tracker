@@ -37,11 +37,7 @@ if (config.nodeEnv === 'production') {
 
 app.use(compression());
 app.use(cors({
-  origin: config.nodeEnv === 'development' ? true : (
-    config.frontendUrl === '*' 
-      ? true 
-      : config.frontendUrl.split(',').map(url => url.trim())
-  ),
+  origin: process.env.FRONTEND_URL || true,
   credentials: true
 }));
 app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));

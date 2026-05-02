@@ -3,19 +3,14 @@ import app from './src/app.js';
 import { config } from './src/config/env.js';
 import initSocket from './src/sockets/socket.js';
 
-const PORT = config.port;
+const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
 // Initialize Socket.IO
 initSocket(server);
 
 server.listen(PORT, () => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] 🚀 Merchant API System Online`);
-  console.log(`[${timestamp}] 🌐 Mode: ${config.nodeEnv}`);
-  console.log(`[${timestamp}] 🔌 Port: ${PORT}`);
-  console.log(`[${timestamp}] 🛡️  Security Headers: Helmet Active`);
-  console.log(`[${timestamp}] 📦 Database: Prisma Adapter Connected`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 // Graceful shutdown

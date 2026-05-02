@@ -1,16 +1,7 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!API_URL && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-  console.warn('NEXT_PUBLIC_API_URL is missing, falling back to 127.0.0.1 for development.');
-}
-
-// Use 127.0.0.1 instead of localhost for Windows stability
-let finalApiUrl = API_URL || 'http://127.0.0.1:5000/api';
-
-if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && finalApiUrl.includes('127.0.0.1')) {
-  console.error('CRITICAL: API is pointing to 127.0.0.1 but app is running in production. Please set NEXT_PUBLIC_API_URL.');
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
+const finalApiUrl = API_URL;
 
 export const getServerUrl = () => {
   return finalApiUrl.replace('/api', '');
