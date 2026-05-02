@@ -25,14 +25,16 @@ export default function ChatListPage() {
     // Connect socket to receive real-time updates for the list
     if (user?.id) {
       const socket = socketService.connect();
-      socket.on('receive_message', () => {
-        // Refresh list when new messages arrive
-        fetchConversations();
-      });
-      
-      return () => {
-        socket.off('receive_message');
-      };
+      if (socket) {
+        socket.on('receive_message', () => {
+          // Refresh list when new messages arrive
+          fetchConversations();
+        });
+        
+        return () => {
+          socket.off('receive_message');
+        };
+      }
     }
   }, [user]);
 

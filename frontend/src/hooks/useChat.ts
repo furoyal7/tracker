@@ -8,39 +8,41 @@ export const useChat = (conversationId?: string, userId?: string) => {
 
   useEffect(() => {
     const socket = socketService.connect();
+    
+    if (socket) {
+      socket.on('connect', () => setIsConnected(true));
+      socket.on('disconnect', () => setIsConnected(false));
 
-    socket.on('connect', () => setIsConnected(true));
-    socket.on('disconnect', () => setIsConnected(false));
-
-    if (conversationId) {
-      socket.emit('join_conversation', conversationId);
-
-      socket.on('receive_message', (message: any) => {
-        if (message.conversationId === conversationId) {
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === message.id)) return prev;
-            return [...prev, message];
-          });
-        }
-      });
-
-      socket.on('user_typing', (data: any) => {
-        if (data.conversationId === conversationId && data.userId !== userId) {
-          setIsTyping(true);
-          setTimeout(() => setIsTyping(false), 3000);
-        }
-      });
-    }
-
-    return () => {
       if (conversationId) {
-        socket.emit('leave_conversation', conversationId);
+        socket.emit('join_conversation', conversationId);
+
+        socket.on('receive_message', (message: any) => {
+          if (message.conversationId === conversationId) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === message.id)) return prev;
+              return [...prev, message];
+            });
+          }
+        });
+
+        socket.on('user_typing', (data: any) => {
+          if (data.conversationId === conversationId && data.userId !== userId) {
+            setIsTyping(true);
+            setTimeout(() => setIsTyping(false), 3000);
+          }
+        });
       }
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('receive_message');
-      socket.off('user_typing');
-    };
+
+      return () => {
+        if (conversationId) {
+          socket.emit('leave_conversation', conversationId);
+        }
+        socket.off('connect');
+        socket.off('disconnect');
+        socket.off('receive_message');
+        socket.off('user_typing');
+      };
+    }
   }, [conversationId, userId]);
 
   const sendMessage = useCallback((text: string) => {

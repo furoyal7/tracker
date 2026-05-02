@@ -28,36 +28,38 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
     if (isAuthenticated && user?.id) {
       const socket = socketService.connect();
       
-      const handleNewMessage = (message: any) => {
-        // Only show notification if:
-        // 1. Message is NOT from the current user
-        // 2. User is NOT currently in the conversation room
-        const currentChatId = pathname?.split('/').pop();
-        
-        if (message.senderId !== user.id && message.conversationId !== currentChatId) {
-          toast(
-            <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push(`/chat/${message.conversationId}`)}>
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">New Message</p>
-                <p className="text-sm font-bold text-slate-900 truncate">{message.senderName}</p>
-                <p className="text-xs text-slate-500 truncate">{message.text}</p>
-              </div>
-            </div>,
-            {
-              duration: 4000,
-              className: "rounded-3xl border-none shadow-2xl bg-white p-4",
-            }
-          );
-        }
-      };
+      if (socket) {
+        const handleNewMessage = (message: any) => {
+          // Only show notification if:
+          // 1. Message is NOT from the current user
+          // 2. User is NOT currently in the conversation room
+          const currentChatId = pathname?.split('/').pop();
+          
+          if (message.senderId !== user.id && message.conversationId !== currentChatId) {
+            toast(
+              <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push(`/chat/${message.conversationId}`)}>
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">New Message</p>
+                  <p className="text-sm font-bold text-slate-900 truncate">{message.senderName}</p>
+                  <p className="text-xs text-slate-500 truncate">{message.text}</p>
+                </div>
+              </div>,
+              {
+                duration: 4000,
+                className: "rounded-3xl border-none shadow-2xl bg-white p-4",
+              }
+            );
+          }
+        };
 
-      socket.on('receive_message', handleNewMessage);
-      return () => {
-        socket.off('receive_message', handleNewMessage);
-      };
+        socket.on('receive_message', handleNewMessage);
+        return () => {
+          socket.off('receive_message', handleNewMessage);
+        };
+      }
     }
   }, [isAuthenticated, user?.id, pathname, router]);
 
