@@ -115,6 +115,9 @@ model Message {
   text           String
   createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
 }
 
 model ExchangeOrder {
