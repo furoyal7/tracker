@@ -5,11 +5,25 @@ import { config } from '../config/env.js';
 import { verifyToken } from '../utils/jwt.js';
 
 const initSocket = (server) => {
+  const rawFrontendUrl = process.env.FRONTEND_URL || '';
+  const frontendUrl = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) : rawFrontendUrl;
+  
+  const allowedOrigins = [
+    frontendUrl,
+    'https://tracker-kohl-seven.vercel.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ].filter(Boolean);
+
   const io = new Server(server, {
     cors: {
-      origin: config.frontendUrl === '*' 
-        ? true 
-        : config.frontendUrl.split(',').map(url => url.trim()),
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+          callback(null, true);
+        } else {
+          callback(null, false); // Decline but don't crash
+        }
+      },
       methods: ["GET", "POST"],
       credentials: true
     },

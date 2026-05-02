@@ -8,10 +8,13 @@ if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' &&
 
 class SocketService {
   private socket: Socket | null = null;
+  private isConnecting: boolean = false;
 
   connect() {
     if (this.socket?.connected) return this.socket;
+    if (this.isConnecting) return this.socket;
 
+    this.isConnecting = true;
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
     this.socket = io(SOCKET_URL, {
@@ -19,17 +22,21 @@ class SocketService {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      transports: ['websocket', 'polling'], // Allow polling fallback for restrictive networks
     });
 
     this.socket.on('connect', () => {
+      this.isConnecting = false;
       console.log('[Socket] Connected to server');
     });
 
     this.socket.on('disconnect', (reason) => {
+      this.isConnecting = false;
       console.log('[Socket] Disconnected:', reason);
     });
 
     this.socket.on('connect_error', (error) => {
+      this.isConnecting = false;
       console.error('[Socket] Connection error:', error.message);
     });
 
@@ -37,7 +44,7 @@ class SocketService {
   }
 
   getSocket() {
-    if (!this.socket?.connected) {
+    if (!this.socket?.connected && !this.isConnecting) {
       return this.connect();
     }
     return this.socket;
