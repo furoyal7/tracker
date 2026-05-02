@@ -78,21 +78,26 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-blue-100 flex justify-center">
-      {/* 📱 Desktop Centered Phone Shell */}
-      <div className="w-full max-w-lg bg-white min-h-screen shadow-2xl relative flex flex-col">
-        
-        {/* 🔝 Fixed Top Header */}
-        <MobileHeader />
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-blue-100 antialiased overflow-x-hidden">
+      {/* 🔝 Base Mobile Header (0px+) */}
+      <MobileHeader />
 
-        {/* 📜 Main Content Area */}
-        <main className="flex-1 w-full pt-20 pb-24 px-6 overflow-y-auto no-scrollbar animate-ingress">
-          {children}
+      <div className="flex flex-col w-full">
+        {/* 📜 Main Content - Single Column Base (320px+) */}
+        <main className="w-full pt-20 pb-28 px-4 animate-ingress
+          sm:px-6 
+          md:px-10 md:pt-24 
+          lg:px-16 lg:max-w-7xl lg:mx-auto">
+          
+          <div className="w-full">
+            {children}
+          </div>
         </main>
+      </div>
 
-        {/* 🧭 Fixed Bottom Navigation */}
+      {/* 🧭 Base Mobile Navigation (0px+) - Hidden on LG (1024px+) */}
+      <div className="lg:hidden">
         <MobileBottomNav />
-
       </div>
     </div>
   );

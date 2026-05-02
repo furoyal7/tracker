@@ -344,7 +344,7 @@ function TransactionsContent() {
                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Type Selector */}
                   <div className="flex items-center p-1 bg-slate-50 rounded-xl w-full">
                     {['INCOME', 'EXPENSE'].map((t) => (
@@ -353,7 +353,7 @@ function TransactionsContent() {
                         type="button"
                         onClick={() => setType(t as any)}
                         className={cn(
-                          "flex-1 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all",
+                          "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
                           type === t 
                             ? "bg-white shadow-sm " + (t === 'INCOME' ? "text-emerald-600" : "text-rose-600")
                             : "text-slate-400"
@@ -364,24 +364,25 @@ function TransactionsContent() {
                     ))}
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {/* Amount Input */}
                     <div className="relative group">
                        <input 
                         type="number" 
+                        inputMode="decimal"
                         step="0.01"
                         placeholder="0.00" 
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         required
-                        className="w-full bg-slate-50 border-none px-4 py-6 rounded-xl text-xl font-black text-center focus:ring-1 focus:ring-blue-100 outline-none"
+                        className="w-full bg-slate-50 border-none px-4 py-8 rounded-2xl text-3xl font-black text-center focus:ring-1 focus:ring-blue-100 outline-none transition-all"
                       />
-                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-lg font-black text-slate-200 group-focus-within:text-slate-400">$</span>
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xl font-black text-slate-200 group-focus-within:text-slate-400">$</span>
                     </div>
 
                     {/* Professional Info Group */}
-                    <div className="bg-slate-50/50 rounded-xl p-3.5 space-y-3.5">
-                       <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Business Details</label>
+                    <div className="bg-slate-50/50 rounded-2xl p-4 md:p-6 space-y-4">
+                       <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Business Details</label>
                        
                        <div className="grid grid-cols-3 gap-2">
                           {paymentMethods.map(m => (
@@ -390,48 +391,48 @@ function TransactionsContent() {
                               type="button"
                               onClick={() => setPaymentMethod(m.id)}
                               className={cn(
-                                "flex items-center justify-center space-x-2 py-2 px-1 rounded-lg border transition-all",
+                                "flex items-center justify-center space-x-2 py-3 px-1 rounded-xl border transition-all min-h-[44px]",
                                 paymentMethod === m.id ? "bg-white border-slate-900 shadow-sm" : "border-transparent opacity-50"
                               )}
                             >
-                               <m.icon size={12} className={m.color.split(' ')[1]} />
-                               <span className="text-[8px] font-black uppercase">{m.label}</span>
+                               <m.icon size={14} className={m.color.split(' ')[1]} />
+                               <span className="text-[9px] font-black uppercase">{m.label}</span>
                             </button>
                           ))}
                        </div>
 
-                       <div className="grid grid-cols-2 gap-2.5">
-                          <div className="space-y-1">
-                             <label className="text-[7px] font-black uppercase tracking-widest text-slate-400 px-1">{type === 'INCOME' ? 'Customer' : 'Supplier'}</label>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                             <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">{type === 'INCOME' ? 'Customer' : 'Supplier'}</label>
                              <input 
                                type="text"
                                placeholder="..."
                                value={partyName}
                                onChange={(e) => setPartyName(e.target.value)}
-                               className="w-full bg-white border border-slate-100 rounded-lg p-2.5 text-[9px] font-bold outline-none"
+                               className="w-full bg-white border border-slate-100 rounded-xl p-3.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
                              />
                           </div>
-                          <div className="space-y-1">
-                             <label className="text-[7px] font-black uppercase tracking-widest text-slate-400 px-1">Ref No.</label>
+                          <div className="space-y-1.5">
+                             <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Ref No.</label>
                              <input 
                                type="text"
                                placeholder="..."
                                value={reference}
                                onChange={(e) => setReference(e.target.value)}
-                               className="w-full bg-white border border-slate-100 rounded-lg p-2.5 text-[9px] font-bold outline-none"
+                               className="w-full bg-white border border-slate-100 rounded-xl p-3.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
                              />
                           </div>
                        </div>
                     </div>
 
-                    <div className="space-y-3.5">
+                    <div className="space-y-4">
                       {/* Product Selector */}
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Link Inventory</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Link Inventory</label>
                         <select
                           value={productId}
                           onChange={(e) => handleProductChange(e.target.value)}
-                          className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                          className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50 appearance-none"
                         >
                           <option value="">No link</option>
                           {products.map(p => (
@@ -441,49 +442,50 @@ function TransactionsContent() {
                       </div>
 
                       {productId && (
-                        <div className="space-y-1 animate-in fade-in duration-200">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Quantity</label>
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Quantity</label>
                           <input 
                             type="number" 
+                            inputMode="numeric"
                             min="1"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
-                            className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                            className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
                           />
                         </div>
                       )}
 
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
                           <input 
                             type="text" 
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                             placeholder="e.g., Sale"
-                            className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                            className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
                             required
                           />
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Note</label>
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Note</label>
                           <input 
                             type="text" 
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="..."
-                            className="w-full bg-slate-50 border-none p-3 rounded-lg text-[10px] font-bold outline-none"
+                            className="w-full bg-slate-50 border-none p-4 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-50"
                           />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-2">
+                  <div className="pt-4">
                     <Button 
                       type="submit" 
                       isLoading={isLoading}
-                      className="w-full bg-blue-600 text-white py-4 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-blue-100"
+                      className="w-full bg-blue-600 text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-100 active:scale-[0.98] transition-all"
                     >
                       Save Record
                     </Button>

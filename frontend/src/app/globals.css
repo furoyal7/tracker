@@ -55,6 +55,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   overflow-x: hidden;
+  font-size: 16px; /* Base font size for mobile accessibility */
+  line-height: 1.5;
 }
 
 /* 📱 Mobile Optimized Scrolling & Overscroll */

@@ -27,31 +27,28 @@ export const MobileBottomNav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass pb-safe">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 pb-safe lg:hidden">
+      <div className="flex items-center justify-between h-20 max-w-lg mx-auto">
         {navItems.map((item) => {
+          const Icon = item.icon;
           const isActive = pathname === item.href;
+          
           return (
             <Link 
-              key={item.href} 
+              key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center w-full h-full space-y-0.5 transition-all duration-200",
-                isActive ? "text-blue-600 scale-105" : "text-slate-400 hover:text-slate-600"
+                "flex flex-col items-center justify-center space-y-1.5 transition-all active:scale-90 px-3",
+                isActive ? "text-blue-600" : "text-slate-400"
               )}
             >
               <div className={cn(
-                "p-1 rounded-xl transition-all duration-200",
-                isActive && "bg-blue-50 text-blue-600"
+                "p-2 rounded-xl transition-all",
+                isActive ? "bg-blue-50" : "bg-transparent"
               )}>
-                <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon size={20} strokeWidth={isActive ? 3 : 2} />
               </div>
-              <span className={cn(
-                "text-[8px] font-black uppercase tracking-tighter transition-all duration-200 leading-none",
-                isActive ? "opacity-100" : "opacity-60"
-              )}>
-                {item.label}
-              </span>
+              <span className="text-[8px] font-black uppercase tracking-widest">{item.label}</span>
             </Link>
           );
         })}

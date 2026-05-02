@@ -23,9 +23,9 @@ export const DashboardSummary = () => {
 
   if (isLoading && !summary) {
     return (
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-32 animate-pulse rounded-[2.5rem] bg-slate-50 border border-slate-100" />
+          <div key={i} className="h-32 animate-pulse rounded-[2rem] md:rounded-[2.5rem] bg-slate-50 border border-slate-100" />
         ))}
       </div>
     );
@@ -63,14 +63,14 @@ export const DashboardSummary = () => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {items.map((item) => (
-        <div key={item.title} className="bg-white rounded-[2.5rem] p-6 border border-slate-50 shadow-[0_4px_20px_-1px_rgba(0,0,0,0.01)] flex flex-col active:scale-95 transition-all">
-          <div className={cn('p-3 rounded-[1.25rem] w-fit mb-4', item.bg)}>
+        <div key={item.title} className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-50 shadow-[0_4px_20px_-1px_rgba(0,0,0,0.01)] flex flex-col active:scale-95 transition-all hover:shadow-xl hover:shadow-blue-50/20 group">
+          <div className={cn('p-3 rounded-[1.25rem] w-fit mb-4 transition-transform group-hover:scale-110', item.bg)}>
             <item.icon className={cn('h-5 w-5 stroke-[2.5px]', item.color)} />
           </div>
-          <p className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mb-1.5 leading-none">{item.title}</p>
-          <h4 className={cn('text-xl font-black tracking-tighter tabular-nums text-slate-900 leading-none')}>
+          <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 mb-2 leading-none">{item.title}</p>
+          <h4 className={cn('text-2xl md:text-3xl font-black tracking-tighter tabular-nums text-slate-900 leading-none')}>
             {item.value}
           </h4>
         </div>
