@@ -199,16 +199,20 @@ function LoginContent() {
           </div>
 
           <div className="flex justify-center w-full">
-            <div className="w-full flex justify-center transition-transform duration-300 hover:scale-105">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => toast.error('Google Login Failed')}
-                theme="outline"
-                shape="pill"
-                size="large"
-                text="continue_with"
-              />
-            </div>
+            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && !process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID.includes('placeholder') ? (
+              <div className="w-full flex justify-center transition-transform duration-300 hover:scale-105">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error('Google Login Failed')}
+                  theme="outline"
+                  shape="pill"
+                  size="large"
+                  text="continue_with"
+                />
+              </div>
+            ) : (
+              <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Enterprise Auth Unavailable</p>
+            )}
           </div>
 
           <div className="pt-4 text-center border-t border-slate-50">

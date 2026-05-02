@@ -1,6 +1,15 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
+let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
+
+// Ensure the API URL ends with /api
+if (API_URL.endsWith('/')) {
+  API_URL = API_URL.slice(0, -1);
+}
+if (!API_URL.endsWith('/api')) {
+  API_URL = `${API_URL}/api`;
+}
+
 const finalApiUrl = API_URL;
 
 export const getServerUrl = () => {
