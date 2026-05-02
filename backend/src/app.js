@@ -38,8 +38,11 @@ if (config.nodeEnv === 'production') {
 app.use(compression());
 
 // Robust CORS configuration
+const rawFrontendUrl = process.env.FRONTEND_URL || '';
+const frontendUrl = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) : rawFrontendUrl;
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  frontendUrl,
   'https://tracker-kohl-seven.vercel.app', // Explicitly allow current deployment
   'http://localhost:3000',
   'http://127.0.0.1:3000'
