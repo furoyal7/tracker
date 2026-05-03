@@ -21,7 +21,10 @@ import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { cn } from '@/utils/cn';
 
+import { useTranslation } from 'react-i18next';
+
 export default function SalesPage() {
+  const { t } = useTranslation();
   const { products, fetchProducts } = useInventoryStore();
   const { addSale, isLoading: isSaving } = useSaleStore();
   
@@ -44,7 +47,7 @@ export default function SalesPage() {
     const existing = cart.find(item => item.productId === product.id);
     if (existing) {
       if (existing.quantity >= product.quantity) {
-        toast.error(`Only ${product.quantity} units available`);
+        toast.error(`${t('sales.only')} ${product.quantity} ${t('sales.unitsAvailable')}`);
         return;
       }
       setCart(cart.map(item => 
@@ -69,7 +72,7 @@ export default function SalesPage() {
         const product = products.find(p => p.id === productId);
         const newQty = Math.max(0, item.quantity + delta);
         if (product && newQty > product.quantity) {
-          toast.error(`Only ${product.quantity} units available`);
+          toast.error(`${t('sales.only')} ${product.quantity} ${t('sales.unitsAvailable')}`);
           return item;
         }
         return { ...item, quantity: newQty };
@@ -86,17 +89,17 @@ export default function SalesPage() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) {
-      toast.error('Cart is empty');
+      toast.error(t('sales.cartEmpty'));
       return;
     }
 
     if (!customerName) {
-      toast.error('Customer name is required for business records');
+      toast.error(t('sales.customerNameRequired'));
       return;
     }
 
     if (balance > 0 && !dueDate) {
-      toast.error('Please set a due date for the remaining balance');
+      toast.error(t('sales.dueDateRequired'));
       return;
     }
 
@@ -123,7 +126,7 @@ export default function SalesPage() {
       };
 
       await addSale(payload);
-      toast.success('Sale registered and persisted successfully!');
+      toast.success(t('sales.saleSuccess'));
       setCart([]);
       setCustomerName('');
       setCustomerPhone('');
@@ -132,7 +135,7 @@ export default function SalesPage() {
       setTax('0');
       setDueDate('');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to process sale');
+      toast.error(error.message || t('sales.saleError'));
     }
   };
 
@@ -155,8 +158,8 @@ export default function SalesPage() {
         {/* 🏷️ Header */}
         <div className="flex items-center justify-between px-1">
            <div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900">Sales Terminal</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">High-integrity registration system</p>
+              <h1 className="text-xl font-black tracking-tight text-slate-900">{t('sales.terminalTitle')}</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">{t('sales.terminalSubtitle')}</p>
            </div>
            <div className="h-10 w-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl">
               <ShoppingBag size={18} />
@@ -169,7 +172,7 @@ export default function SalesPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search products to add..."
+                placeholder={t('sales.searchPlaceholder')}
                 className="w-full bg-white border border-slate-100 shadow-sm rounded-xl py-3 pl-11 pr-4 text-[12px] font-bold focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,7 +195,7 @@ export default function SalesPage() {
                    </div>
                    <p className="text-[10px] font-black text-slate-900 leading-tight mb-1 truncate">{product.name}</p>
                    <p className="text-[9px] font-black text-blue-600">{formatCurrency(product.sellingPrice)}</p>
-                   <p className="text-[7px] font-bold text-slate-300 uppercase tracking-widest mt-1">{product.quantity} in stock</p>
+                   <p className="text-[7px] font-bold text-slate-300 uppercase tracking-widest mt-1">{product.quantity} {t('sales.inStock')}</p>
                 </button>
               ))}
            </div>
@@ -202,8 +205,8 @@ export default function SalesPage() {
         {cart.length > 0 && (
           <section className="space-y-3">
              <div className="flex items-center justify-between px-2">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Order Items</h3>
-                <span className="text-[9px] font-black text-blue-600">{cart.length} items selected</span>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('sales.orderItems')}</h3>
+                <span className="text-[9px] font-black text-blue-600">{cart.length} {t('sales.itemsSelected')}</span>
              </div>
              <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden">
                 <div className="divide-y divide-slate-50">
@@ -240,13 +243,13 @@ export default function SalesPage() {
            <div className="bg-white rounded-[2rem] p-6 border border-slate-50 shadow-sm space-y-4">
               <div className="flex items-center space-x-2 mb-2">
                  <User size={14} className="text-slate-400" />
-                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Customer Intelligence</h3>
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('sales.customerIntel')}</h3>
               </div>
               <div className="space-y-3">
                  <div className="grid grid-cols-2 gap-3">
                     <input 
                       type="text" 
-                      placeholder="Customer Name (Required)"
+                      placeholder={t('sales.customerNamePlaceholder')}
                       required
                       className="bg-slate-50 border-none rounded-xl p-3 text-[10px] font-black outline-none focus:ring-1 focus:ring-blue-100"
                       value={customerName}
@@ -254,23 +257,23 @@ export default function SalesPage() {
                     />
                     <input 
                       type="text" 
-                      placeholder="Contact Number"
+                      placeholder={t('sales.contactPlaceholder')}
                       className="bg-slate-50 border-none rounded-xl p-3 text-[10px] font-black outline-none focus:ring-1 focus:ring-blue-100"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                     />
                  </div>
                  <div className="flex p-1 bg-slate-50 rounded-xl">
-                    {['RETAIL', 'WHOLESALE', 'REPEAT'].map(t => (
+                    {['RETAIL', 'WHOLESALE', 'REPEAT'].map(st => (
                       <button
-                        key={t}
-                        onClick={() => setCustomerType(t)}
+                        key={st}
+                        onClick={() => setCustomerType(st)}
                         className={cn(
                           "flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all",
-                          customerType === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-400"
+                          customerType === st ? "bg-white text-slate-900 shadow-sm" : "text-slate-400"
                         )}
                       >
-                        {t}
+                        {t(`sales.type.${st.toLowerCase()}`)}
                       </button>
                     ))}
                  </div>
@@ -280,14 +283,14 @@ export default function SalesPage() {
            <div className="bg-white rounded-[2rem] p-6 border border-slate-50 shadow-sm space-y-5">
               <div className="flex items-center space-x-2 mb-2">
                  <CreditCard size={14} className="text-slate-400" />
-                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Payment Summary</h3>
+                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('sales.paymentSummary')}</h3>
               </div>
               
               <div className="grid grid-cols-3 gap-2">
                  {[
-                   { id: 'CASH', label: 'Cash', icon: Wallet, color: 'text-orange-600', bg: 'bg-orange-50' },
-                   { id: 'BANK', label: 'Bank', icon: Banknote, color: 'text-blue-600', bg: 'bg-blue-50' },
-                   { id: 'CARD', label: 'Card', icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
+                   { id: 'CASH', label: t('sales.method.cash'), icon: Wallet, color: 'text-orange-600', bg: 'bg-orange-50' },
+                   { id: 'BANK', label: t('sales.method.bank'), icon: Banknote, color: 'text-blue-600', bg: 'bg-blue-50' },
+                   { id: 'CARD', label: t('sales.method.card'), icon: CreditCard, color: 'text-purple-600', bg: 'bg-purple-50' },
                  ].map(m => (
                    <button
                      key={m.id}
@@ -305,11 +308,11 @@ export default function SalesPage() {
 
               <div className="space-y-3 pt-2">
                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span>Subtotal</span>
+                    <span>{t('sales.subtotal')}</span>
                     <span className="text-slate-900">{formatCurrency(subtotal)}</span>
                  </div>
                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span>Tax (%)</span>
+                    <span>{t('sales.tax')} (%)</span>
                     <input 
                       type="number" 
                       className="w-16 bg-slate-50 border-none rounded-lg p-1 text-right text-slate-900 outline-none"
@@ -318,7 +321,7 @@ export default function SalesPage() {
                     />
                  </div>
                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span>Discount ($)</span>
+                    <span>{t('sales.discount')} ($)</span>
                     <input 
                       type="number" 
                       className="w-16 bg-slate-50 border-none rounded-lg p-1 text-right text-slate-900 outline-none"
@@ -328,13 +331,13 @@ export default function SalesPage() {
                  </div>
                  <div className="h-px bg-slate-50 w-full" />
                  <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-900">Total Amount</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-900">{t('sales.totalAmount')}</span>
                     <span className="text-lg font-black text-blue-600 tabular-nums">{formatCurrency(totalAmount)}</span>
                  </div>
               </div>
 
               <div className="pt-2 space-y-3">
-                 <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Amount Paid Now</label>
+                 <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">{t('sales.amountPaidNow')}</label>
                  <div className="relative">
                     <input 
                       type="number" 
@@ -348,7 +351,7 @@ export default function SalesPage() {
                         onClick={() => setAmountPaid(totalAmount.toString())}
                         className="text-[8px] font-black uppercase tracking-widest bg-white/10 px-2 py-1 rounded-md hover:bg-white/20"
                        >
-                         Full
+                         {t('sales.full')}
                        </button>
                     </div>
                  </div>
@@ -358,11 +361,11 @@ export default function SalesPage() {
                       <div className="flex items-center space-x-2 bg-rose-50 p-3 rounded-xl border border-rose-100">
                          <Info size={12} className="text-rose-600" />
                          <p className="text-[9px] font-bold text-rose-600 uppercase tracking-tight">
-                           Remaining <span className="font-black">{formatCurrency(balance)}</span> will be added to customer debts.
+                           {t('sales.remaining')} <span className="font-black">{formatCurrency(balance)}</span> {t('sales.debtNotice')}
                          </p>
                       </div>
                       <div className="space-y-1">
-                         <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Repayment Due Date</label>
+                         <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">{t('sales.repaymentDueDate')}</label>
                          <input 
                            type="date" 
                            required
@@ -380,13 +383,13 @@ export default function SalesPage() {
                 isLoading={isSaving}
                 className="w-full bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-100"
               >
-                Complete Sale <ChevronRight size={14} className="ml-2" />
+                {t('sales.completeSale')} <ChevronRight size={14} className="ml-2" />
               </Button>
            </div>
         </section>
 
         <div className="py-10 text-center">
-           <p className="text-[8px] font-black uppercase tracking-[0.5em] text-slate-200">Merchant Sales Terminal • Secure Transaction</p>
+           <p className="text-[8px] font-black uppercase tracking-[0.5em] text-slate-200">{t('sales.footer')}</p>
         </div>
 
       </div>

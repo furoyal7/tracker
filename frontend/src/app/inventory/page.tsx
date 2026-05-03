@@ -8,7 +8,10 @@ import { useInventoryStore } from '@/store/inventoryStore';
 import { cn } from '@/utils/cn';
 import { Product } from '@/types';
 
+import { useTranslation } from 'react-i18next';
+
 export default function InventoryPage() {
+  const { t } = useTranslation();
   const { products, isLoading, fetchProducts, addProduct, updateProduct, deleteProduct } = useInventoryStore();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -89,7 +92,7 @@ export default function InventoryPage() {
               <div className="p-2.5 rounded-2xl bg-blue-50 w-fit mb-3 text-blue-600">
                  <Package size={18} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Items</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{t('inventory.totalItems')}</p>
               <h4 className="text-xl font-black text-slate-900 tabular-nums">
                 {products.reduce((acc, p) => acc + p.quantity, 0)}
               </h4>
@@ -99,7 +102,7 @@ export default function InventoryPage() {
               <div className="p-2.5 rounded-2xl bg-amber-50 w-fit mb-3 text-amber-600">
                  <AlertTriangle size={18} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Low Stock</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{t('inventory.lowStock')}</p>
               <h4 className="text-xl font-black text-rose-600 tabular-nums">
                 {products.filter(p => p.quantity < 5).length}
               </h4>
@@ -111,7 +114,7 @@ export default function InventoryPage() {
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
            <input 
              type="text" 
-             placeholder="Search items..."
+             placeholder={t('inventory.searchItems')}
              className="w-full bg-slate-50 border-none rounded-2xl py-3.5 pl-11 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none"
              value={searchQuery}
              onChange={(e) => setSearchQuery(e.target.value)}
@@ -122,7 +125,7 @@ export default function InventoryPage() {
         <div className="flex flex-col bg-white overflow-hidden border-y border-slate-50">
            {filteredProducts.length === 0 && !isLoading ? (
              <div className="py-20 text-center">
-                <p className="text-[14px] text-slate-400">No items in inventory</p>
+                <p className="text-[14px] text-slate-400">{t('inventory.noItems')}</p>
              </div>
            ) : (
              filteredProducts.map((product, index) => (
@@ -159,11 +162,11 @@ export default function InventoryPage() {
                               "text-[12px] font-medium",
                               product.quantity > 5 ? "text-emerald-600" : "text-rose-600"
                             )}>
-                              {product.quantity} units left
+                              {product.quantity} {t('inventory.unitsLeft')}
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-400 shrink-0">
-                            Cost: {formatCurrency(product.costPrice)}
+                            {t('inventory.cost')}: {formatCurrency(product.costPrice)}
                           </p>
                         </div>
                       </div>
@@ -188,7 +191,7 @@ export default function InventoryPage() {
           <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col justify-end">
              <div className="bg-white rounded-t-[3rem] p-8 pb-12 animate-in slide-in-from-bottom duration-300">
                 <div className="flex items-center justify-between mb-8">
-                   <h2 className="text-lg font-black uppercase tracking-tight text-slate-900">{editingId ? 'Edit Item' : 'New Item'}</h2>
+                   <h2 className="text-lg font-black uppercase tracking-tight text-slate-900">{editingId ? t('inventory.editItem') : t('inventory.newItem')}</h2>
                    <button onClick={resetForm} className="p-2 bg-slate-100 rounded-full text-slate-500">
                       <X size={20} />
                    </button>
@@ -197,8 +200,8 @@ export default function InventoryPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-5">
                     <Input 
-                      label="Product Name" 
-                      placeholder="e.g., Slim Wallet" 
+                      label={t('inventory.productName')} 
+                      placeholder={t('inventory.productNamePlaceholder')} 
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
@@ -207,7 +210,7 @@ export default function InventoryPage() {
                     
                     <div className="grid grid-cols-1 gap-5">
                        <Input 
-                        label="Stock Quantity" 
+                        label={t('inventory.stockQuantity')} 
                         type="number" 
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
@@ -217,7 +220,7 @@ export default function InventoryPage() {
                       />
                       <div className="grid grid-cols-2 gap-4">
                         <Input 
-                          label="Cost (Buying)" 
+                          label={t('inventory.costBuying')} 
                           type="number" 
                           value={costPrice}
                           onChange={(e) => setCostPrice(e.target.value)}
@@ -226,7 +229,7 @@ export default function InventoryPage() {
                           className="bg-slate-50 border-none px-4 py-4 rounded-2xl"
                         />
                         <Input 
-                          label="Price (Selling)" 
+                          label={t('inventory.priceSelling')} 
                           type="number" 
                           value={sellingPrice}
                           onChange={(e) => setSellingPrice(e.target.value)}
@@ -240,7 +243,7 @@ export default function InventoryPage() {
 
                   <div className="pt-4">
                     <Button type="submit" className="w-full bg-blue-600 text-white py-8 rounded-3xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-100">
-                      {editingId ? 'Update Stock' : 'Add to Inventory'}
+                      {editingId ? t('inventory.updateStock') : t('inventory.addToInventory')}
                     </Button>
                   </div>
                 </form>

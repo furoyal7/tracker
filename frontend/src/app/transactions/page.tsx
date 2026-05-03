@@ -92,7 +92,7 @@ function TransactionsContent() {
       }
 
       if ((paymentMethod === 'BANK' || paymentMethod === 'CARD') && !reference) {
-        toast.error(`Reference number is required for ${paymentMethod.toLowerCase()} payments`);
+        toast.error(t('transactions.referenceRequiredError', { method: paymentMethod.toLowerCase() }));
         return;
       }
 

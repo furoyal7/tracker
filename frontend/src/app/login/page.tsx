@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from '../../components/layout/LanguageToggle';
 
 import { Suspense } from 'react';
 
@@ -96,7 +97,12 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 relative">
+      {/* 🌐 Language Switcher (Floating Top Right) */}
+      <div className="absolute top-6 right-6">
+        <LanguageToggle />
+      </div>
+
       <div className={`w-full transition-all duration-500 ease-in-out ${mode === 'register' ? 'max-w-[480px]' : 'max-w-[420px]'} space-y-10`}>
         {/* Brand Header */}
         <div className="text-center space-y-4">
