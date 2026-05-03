@@ -8,6 +8,7 @@ router.use(authMiddleware);
 
 // Chat specific paths (mounted under /chat)
 router.get('/list', chatController.getConversations);
+router.get('/conversations', chatController.getConversations);
 router.post('/create', chatController.createConversation);
 router.get('/:chatId', chatController.getConversation);
 router.post('/seen', chatController.markSeen);
