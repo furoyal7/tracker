@@ -13,23 +13,25 @@ export default function SocketInitializer() {
     if (user?.id) {
       const socket = socketService.connect();
 
-      socket.on('receiveMessage', (message) => {
-        receiveMessage(message);
-      });
+      if (socket) {
+        socket.on('receiveMessage', (message) => {
+          receiveMessage(message);
+        });
 
-      socket.on('onlineUsers', (userIds) => {
-        setOnlineUsers(userIds);
-      });
+        socket.on('onlineUsers', (userIds) => {
+          setOnlineUsers(userIds);
+        });
 
-      socket.on('typing', ({ chatId, userId, isTyping }) => {
-        setTyping(chatId, userId, isTyping);
-      });
+        socket.on('typing', ({ chatId, userId, isTyping }) => {
+          setTyping(chatId, userId, isTyping);
+        });
 
-      return () => {
-        socket.off('receiveMessage');
-        socket.off('onlineUsers');
-        socket.off('typing');
-      };
+        return () => {
+          socket.off('receiveMessage');
+          socket.off('onlineUsers');
+          socket.off('typing');
+        };
+      }
     } else {
       socketService.disconnect();
     }

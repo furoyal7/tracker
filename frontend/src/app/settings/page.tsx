@@ -54,7 +54,7 @@ const ProToggle = ({ label, sublabel, enabled, onToggle }: ToggleProps) => (
 );
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isSaving, setIsSaving] = useState(false);
   const { user, logout, updatePasscode, updateProfile, uploadAvatar } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);

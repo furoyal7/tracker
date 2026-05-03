@@ -19,7 +19,7 @@ export const getServerUrl = () => {
 const api = axios.create({
   baseURL: finalApiUrl,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
   },
   timeout: 30000, // 30s timeout
 });
