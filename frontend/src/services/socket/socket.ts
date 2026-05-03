@@ -20,9 +20,9 @@ class SocketService {
     this.socket = io(SOCKET_URL, {
       auth: { token },
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      transports: ['websocket', 'polling'], // Allow polling fallback for restrictive networks
+      transports: ['websocket', 'polling'],
     });
 
     this.socket.on('connect', () => {
@@ -55,6 +55,20 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
     }
+  }
+
+  emit(event: string, data: any) {
+    const s = this.getSocket();
+    if (s) s.emit(event, data);
+  }
+
+  on(event: string, callback: (data: any) => void) {
+    const s = this.getSocket();
+    if (s) s.on(event, callback);
+  }
+
+  off(event: string) {
+    if (this.socket) this.socket.off(event);
   }
 }
 

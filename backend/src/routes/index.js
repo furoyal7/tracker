@@ -20,6 +20,7 @@ router.use('/payments', paymentRoutes);
 router.use('/products', productRoutes);
 router.use('/reports', reportRoutes);
 router.use('/chat', chatRoutes);
+router.use('/message', chatRoutes);
 router.use('/exchange', exchangeRoutes);
 router.use('/users', userRoutes);
 

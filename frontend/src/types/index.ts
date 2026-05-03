@@ -12,6 +12,7 @@ export interface User {
   avatarUrl?: string;
   role: 'USER' | 'ADMIN';
   passcode?: string;
+  preferredLanguage: string;
   createdAt: string;
 }
 

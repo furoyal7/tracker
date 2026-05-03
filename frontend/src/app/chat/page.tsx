@@ -8,11 +8,10 @@ import api from '@/services/api';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { socketService } from '@/services/socket/socket';
+import { useChatStore } from '@/store/chatStore';
+import { useTranslation } from 'react-i18next';
 
 export default function ChatListPage() {
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newParticipant, setNewParticipant] = useState('');
   const [foundUser, setFoundUser] = useState<any>(null);
@@ -20,39 +19,12 @@ export default function ChatListPage() {
   const [creating, setCreating] = useState(false);
   const router = useRouter();
   const { user } = useAuthStore();
-
-  useEffect(() => {
-    // Connect socket to receive real-time updates for the list
-    if (user?.id) {
-      const socket = socketService.connect();
-      if (socket) {
-        socket.on('receive_message', () => {
-          // Refresh list when new messages arrive
-          fetchConversations();
-        });
-        
-        return () => {
-          socket.off('receive_message');
-        };
-      }
-    }
-  }, [user]);
-
-  const fetchConversations = async () => {
-    try {
-      const response = await api.get('/chat/conversations') as any;
-      setConversations(response.data || []);
-    } catch (error: any) {
-      if (error._isCancelled) return;
-      toast.error('Failed to load conversations');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { conversations, fetchConversations, loading } = useChatStore();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   const handleSearchUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +34,6 @@ export default function ChatListPage() {
     setFoundUser(null);
     try {
       const response: any = await api.get(`/users/search?username=${newParticipant.trim()}`);
-      // successResponse returns { success: true, message: "...", data: user }
       if (response.success) {
         setFoundUser(response.data);
       }
@@ -78,13 +49,16 @@ export default function ChatListPage() {
 
     setCreating(true);
     try {
-      const response = await api.post('/chat/conversations', { 
-        participantId: foundUser.id 
+      const response = await api.post('/chat/create', { 
+        participantIds: [foundUser.id] 
       }) as any;
       const chat = response.data;
       setNewParticipant('');
       setFoundUser(null);
       setShowNewChat(false);
+      
+      // Refresh list and navigate
+      await fetchConversations();
       router.push(`/chat/${chat.id}`);
     } catch (error) {
       toast.error('Failed to create conversation');
@@ -102,7 +76,7 @@ export default function ChatListPage() {
             <Link href="/" className="hover:bg-white/10 p-1.5 rounded-full transition-all active:scale-90">
               <ChevronLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-xl font-bold tracking-tight">Messages</h1>
+            <h1 className="text-xl font-bold tracking-tight">{t('chat.title')}</h1>
           </div>
           <div className="flex items-center gap-4">
             <Search className="w-5 h-5 opacity-80 cursor-pointer hover:opacity-100" />
@@ -112,9 +86,9 @@ export default function ChatListPage() {
         
         {/* Quick Filters / Status Row */}
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1 text-sm font-medium opacity-90">
-          <span className="border-b-2 border-white pb-1 px-1">All</span>
-          <span className="opacity-60 px-1">Unread</span>
-          <span className="opacity-60 px-1">Groups</span>
+          <span className="border-b-2 border-white pb-1 px-1">{t('chat.all')}</span>
+          <span className="opacity-60 px-1">{t('chat.unread')}</span>
+          <span className="opacity-60 px-1">{t('chat.groups')}</span>
         </div>
       </div>
       
@@ -124,7 +98,7 @@ export default function ChatListPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
             type="text" 
-            placeholder="Search or start new chat" 
+            placeholder={t('chat.searchPlaceholder')}
             className="w-full bg-gray-50 border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-[#25d366] transition-all"
           />
         </div>
@@ -139,7 +113,7 @@ export default function ChatListPage() {
                 <div className="h-4 w-4 bg-[#075e54]/20 rounded-full"></div>
               </div>
             </div>
-            <p className="text-xs font-bold text-[#075e54] uppercase tracking-widest animate-pulse">Syncing Secure Chats</p>
+            <p className="text-xs font-bold text-[#075e54] uppercase tracking-widest animate-pulse">{t('chat.syncing')}</p>
           </div>
         ) : (
           <ChatList conversations={conversations} />
@@ -159,13 +133,13 @@ export default function ChatListPage() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center animate-in fade-in duration-300">
           <div className="w-full bg-white rounded-t-3xl p-6 pb-12 shadow-2xl animate-in slide-in-from-bottom duration-500">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">New Conversation</h3>
-              <button onClick={() => setShowNewChat(false)} className="text-gray-400 hover:text-gray-600 font-medium">Cancel</button>
+              <h3 className="text-xl font-bold text-gray-900">{t('chat.newConversation')}</h3>
+              <button onClick={() => setShowNewChat(false)} className="text-gray-400 hover:text-gray-600 font-medium">{t('common.cancel')}</button>
             </div>
             
             <form onSubmit={handleSearchUser}>
               <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Search Username</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{t('chat.searchUsername')}</label>
                 <div className="flex gap-2">
                   <input 
                     autoFocus
@@ -175,7 +149,7 @@ export default function ChatListPage() {
                       setNewParticipant(e.target.value);
                       setFoundUser(null);
                     }}
-                    placeholder="Enter username" 
+                    placeholder={t('chat.enterUsername')} 
                     className="flex-1 bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-lg focus:border-[#25d366] transition-all outline-none"
                   />
                   <button 
@@ -207,7 +181,7 @@ export default function ChatListPage() {
                   disabled={creating}
                   className="bg-[#25d366] text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg shadow-[#25d366]/20 active:scale-95 transition-all"
                 >
-                  {creating ? '...' : 'Chat'}
+                  {creating ? '...' : t('common.chat')}
                 </button>
               </div>
             )}
@@ -224,15 +198,15 @@ export default function ChatListPage() {
             </div>
             {conversations.length > 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full" />}
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-widest">Chats</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest">{t('common.chat')}</span>
         </div>
         <div className="flex flex-col items-center gap-1 text-gray-400 opacity-60 px-4 py-1 hover:opacity-100 transition-opacity">
           <div className="w-6 h-6 bg-gray-200 rounded-full" />
-          <span className="text-[10px] font-medium uppercase tracking-widest">Status</span>
+          <span className="text-[10px] font-medium uppercase tracking-widest">{t('chat.status')}</span>
         </div>
         <div className="flex flex-col items-center gap-1 text-gray-400 opacity-60 px-4 py-1 hover:opacity-100 transition-opacity">
           <div className="w-6 h-6 bg-gray-200 rounded-full" />
-          <span className="text-[10px] font-medium uppercase tracking-widest">Calls</span>
+          <span className="text-[10px] font-medium uppercase tracking-widest">{t('chat.calls')}</span>
         </div>
       </div>
 

@@ -8,9 +8,11 @@ import {
 } from 'lucide-react';
 import { useFinanceStore } from '@/store/financeStore';
 import { cn } from '@/utils/cn';
+import { useTranslation } from 'react-i18next';
 
 export const DashboardSummary = () => {
   const { summary, isLoading } = useFinanceStore();
+  const { t } = useTranslation();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -33,28 +35,28 @@ export const DashboardSummary = () => {
 
   const items = [
     {
-      title: 'Net Profit',
+      title: t('dashboard.netProfit'),
       value: formatCurrency(summary?.profit || 0),
       icon: DollarSign,
       color: 'text-blue-600',
       bg: 'bg-blue-50/50',
     },
     {
-      title: 'Revenue',
+      title: t('dashboard.revenue'),
       value: formatCurrency(summary?.totalIncome || 0),
       icon: TrendingUp,
       color: 'text-emerald-600',
       bg: 'bg-emerald-50/50',
     },
     {
-      title: 'Expense',
+      title: t('dashboard.expense'),
       value: formatCurrency(summary?.totalExpense || 0),
       icon: TrendingDown,
       color: 'text-rose-600',
       bg: 'bg-rose-50/50',
     },
     {
-      title: 'Pending',
+      title: t('dashboard.pending'),
       value: formatCurrency(summary?.totalReceivable || 0),
       icon: AlertCircle,
       color: 'text-amber-600',

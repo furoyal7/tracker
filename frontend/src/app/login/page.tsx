@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { useTranslation } from 'react-i18next';
 
 import { Suspense } from 'react';
 
@@ -24,6 +25,7 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const { t } = useTranslation();
   
   const { setAuth, isAuthenticated, _hasHydrated } = useAuthStore();
 
@@ -43,7 +45,7 @@ function LoginContent() {
     e.preventDefault();
 
     if (mode === 'register' && password !== confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error(t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -57,8 +59,8 @@ function LoginContent() {
       : { username, password };
 
     const successMsg = mode === 'login' 
-      ? 'Welcome back! You have successfully signed in.' 
-      : 'Account created successfully. Welcome aboard!';
+      ? t('auth.loginSuccess') 
+      : t('auth.registerSuccess');
 
     try {
       const response: any = await api.post(endpoint, payload);
@@ -106,12 +108,12 @@ function LoginContent() {
           <div className="space-y-4">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-slate-900 leading-none">
-                {mode === 'login' ? 'Welcome back' : 'Start your journey'}
+                {mode === 'login' ? t('auth.welcomeBack') : t('auth.startJourney')}
               </h1>
               <p className="text-base text-slate-500 font-medium px-2 leading-relaxed">
                 {mode === 'login' 
-                  ? 'Sign in to access your merchant dashboard' 
-                  : 'Join thousands of merchants managing their business smarter'}
+                  ? t('auth.loginDescription') 
+                  : t('auth.registerDescription')}
               </p>
             </div>
           </div>
@@ -122,8 +124,8 @@ function LoginContent() {
             {mode === 'register' && (
               <div className="animate-in fade-in slide-in-from-top-4 duration-500">
                 <Input
-                  label="Username"
-                  placeholder="Choose a unique username"
+                  label={t('auth.username')}
+                  placeholder={t('auth.usernamePlaceholder')}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -134,8 +136,8 @@ function LoginContent() {
             
             {mode === 'login' && (
               <Input
-                label="Username or Email"
-                placeholder="Enter your username or email"
+                label={t('auth.usernameOrEmail')}
+                placeholder={t('auth.usernameOrEmailPlaceholder')}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
@@ -145,7 +147,7 @@ function LoginContent() {
             
             <div className="relative">
               <Input
-                label="Password"
+                label={t('auth.password')}
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
@@ -166,14 +168,14 @@ function LoginContent() {
             {mode === 'register' && (
               <div className="animate-in fade-in slide-in-from-top-4 duration-500 delay-150">
                 <Input
-                  label="Confirm Password"
+                  label={t('auth.confirmPassword')}
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   className="rounded-xl border-slate-200 h-11"
-                  error={password !== confirmPassword && confirmPassword !== '' ? "Passwords do not match" : undefined}
+                  error={password !== confirmPassword && confirmPassword !== '' ? t('auth.passwordsDoNotMatch') : undefined}
                 />
               </div>
             )}
@@ -184,7 +186,7 @@ function LoginContent() {
                 className={`${mode === 'login' ? 'w-full' : 'px-12'} h-11 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md shadow-blue-50 active:scale-[0.99] transition-all text-sm`}
                 isLoading={isLoading}
               >
-                {mode === 'login' ? 'Sign In' : 'Get Started'}
+                {mode === 'login' ? t('auth.signIn') : t('auth.getStarted')}
               </Button>
             </div>
           </form>
@@ -194,7 +196,7 @@ function LoginContent() {
               <span className="w-full border-t border-slate-100"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">Or continue with</span>
+              <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">{t('auth.orContinueWith')}</span>
             </div>
           </div>
 
@@ -211,7 +213,7 @@ function LoginContent() {
                 />
               </div>
             ) : (
-              <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Enterprise Auth Unavailable</p>
+              <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">{t('auth.enterpriseAuthUnavailable')}</p>
             )}
           </div>
 
@@ -228,9 +230,9 @@ function LoginContent() {
                className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
              >
                {mode === 'login' ? (
-                 <>New here? <span className="text-blue-600">Create an account</span></>
+                 <>{t('auth.newHere')} <span className="text-blue-600">{t('auth.createAccount')}</span></>
                ) : (
-                 <>Already have an account? <span className="text-blue-600">Sign In</span></>
+                 <>{t('auth.alreadyHaveAccount')} <span className="text-blue-600">{t('auth.signIn')}</span></>
                )}
              </button>
           </div>
@@ -239,12 +241,12 @@ function LoginContent() {
         {/* Footer Links */}
         <div className="text-center space-y-6 pt-2 pb-10">
           <p className="text-sm text-slate-400 font-medium leading-relaxed">
-            Protecting your business assets with <br/>
-            <span className="text-slate-600 font-bold hover:underline cursor-pointer">MoneyManager Security</span>.
+            {t('auth.protectingBusiness')} <br/>
+            <span className="text-slate-600 font-bold hover:underline cursor-pointer">{t('auth.moneyManagerSecurity')}</span>.
           </p>
           <div className="h-px bg-slate-100 w-16 mx-auto" />
           <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest leading-none">
-            Secure Infrastructure & Encryption
+            {t('auth.secureInfrastructure')}
           </p>
         </div>
       </div>

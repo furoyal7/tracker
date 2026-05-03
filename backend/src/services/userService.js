@@ -12,13 +12,14 @@ export const getProfile = async (userId) => {
       bio: true,
       avatarUrl: true,
       role: true,
+      preferredLanguage: true,
       createdAt: true
     }
   });
 };
 
 export const updateProfile = async (userId, profileData) => {
-  const { username, name, age, bio, avatarUrl } = profileData;
+  const { username, name, age, bio, avatarUrl, preferredLanguage } = profileData;
 
   // Check if username is already taken by another user
   if (username) {
@@ -38,7 +39,8 @@ export const updateProfile = async (userId, profileData) => {
       name,
       age: age ? parseInt(age) : null,
       bio,
-      avatarUrl
+      avatarUrl,
+      preferredLanguage
     },
     select: {
       id: true,
@@ -49,6 +51,7 @@ export const updateProfile = async (userId, profileData) => {
       bio: true,
       avatarUrl: true,
       role: true,
+      preferredLanguage: true,
       createdAt: true
     }
   });

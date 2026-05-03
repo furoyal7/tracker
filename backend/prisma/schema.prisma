@@ -14,6 +14,9 @@ model User {
   updatedAt      DateTime        @updatedAt
   passcode       String?
   role           UserRole        @default(USER)
+  isOnline       Boolean         @default(false)
+  lastSeen       DateTime        @default(now())
+  preferredLanguage String       @default("en")
   age            Int?
   avatarUrl      String?
   bio            String?
@@ -24,8 +27,9 @@ model User {
   products       Product[]
   transactions   Transaction[]
   sales          Sale[]
-  createdConversations Conversation[] @relation("CreatedConversations")
-  joinedConversations  Conversation[] @relation("JoinedConversations")
+  conversations  Conversation[]  @relation("ConversationParticipants")
+  messages       Message[]       @relation("MessageSender")
+  seenMessages   Message[]       @relation("MessageSeenBy")
 }
 
 model Transaction {
@@ -95,17 +99,16 @@ model Payment {
 }
 
 model Conversation {
-  id              String    @id @default(uuid())
-  creatorId       String
-  participantId   String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  messages        Message[]
+  id              String           @id @default(uuid())
+  type            ConversationType @default(PRIVATE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  lastMessageId   String?
   
-  creator         User      @relation("CreatedConversations", fields: [creatorId], references: [id])
-  participant     User      @relation("JoinedConversations", fields: [participantId], references: [id])
+  participants    User[]           @relation("ConversationParticipants")
+  messages        Message[]
 
-  @@unique([creatorId, participantId])
+  @@index([updatedAt])
 }
 
 model Message {
@@ -113,11 +116,16 @@ model Message {
   conversationId String
   senderId       String
   text           String
+  attachments    String[]     @default([])
   createdAt      DateTime     @default(now())
+  
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  seenBy         User[]       @relation("MessageSeenBy")
 
   @@index([conversationId])
   @@index([senderId])
+  @@index([createdAt])
 }
 
 model ExchangeOrder {
@@ -234,7 +242,15 @@ enum DebtStatus {
 
 enum UserRole {
   USER
+  MERCHANT
+  CUSTOMER
   ADMIN
+}
+
+enum ConversationType {
+  PRIVATE
+  GROUP
+  SUPPORT
 }
 
 enum ExchangeStatus {

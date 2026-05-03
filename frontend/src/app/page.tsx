@@ -12,11 +12,13 @@ import Link from 'next/link';
 import exchangeService from '@/services/exchangeService';
 import { ExchangeOrder } from '@/types';
 import { Repeat, Clock, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function DashboardPage() {
   const { fetchSummary, fetchTransactions } = useFinanceStore();
   const { fetchProducts } = useInventoryStore();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
   const [activeSession, setActiveSession] = React.useState<ExchangeOrder | null>(null);
   const isSyncing = useRef(false);
 
@@ -66,20 +68,20 @@ export default function DashboardPage() {
         {/* 📊 Financial Summary (Flat Cards) */}
         <section className="space-y-3 px-4">
           <div className="flex items-center justify-between">
-             <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Financial Pulse</h3>
+             <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">{t('dashboard.summary')}</h3>
           </div>
           <DashboardSummary />
         </section>
 
         {/* 🛠️ Quick Actions */}
         <section className="space-y-3 px-4">
-           <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Quick Actions</h3>
+           <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">{t('dashboard.quickActions')}</h3>
            <QuickActions />
         </section>
 
         {/* 📉 Performance */}
         <section className="space-y-3 px-4">
-          <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Performance</h3>
+          <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">{t('dashboard.performance')}</h3>
           <div className="bg-white rounded-2xl p-4 border border-slate-50">
             <FinancialChart />
           </div>
@@ -88,9 +90,9 @@ export default function DashboardPage() {
         {/* 📋 Recent Activity (Telegram List) */}
         <section className="space-y-3">
           <div className="flex items-center justify-between px-4">
-            <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">Recent Transactions</h3>
+            <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">{t('dashboard.recentTransactions')}</h3>
             <Link href="/transactions" className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">
-              See All
+              {t('common.seeAll')}
             </Link>
           </div>
           <div className="bg-white border-y border-slate-50 overflow-hidden">
@@ -99,7 +101,7 @@ export default function DashboardPage() {
         </section>
 
         <div className="py-6 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">Secured with End-to-End Encryption</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">{t('common.secured')}</p>
         </div>
       </div>
     </MainLayout>

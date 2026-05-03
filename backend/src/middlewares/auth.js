@@ -27,16 +27,19 @@ export const authMiddleware = async (req, res, next) => {
       throw new ApiError(401, 'Unauthorized - Token payload missing user ID');
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-        passcode: true,
-      }
-    });
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: {
+          id: true,
+          role: true,
+        }
+      });
+    } catch (dbError) {
+      console.error(`[AUTH] Prisma error for ID ${decoded.id}:`, dbError);
+      throw new ApiError(500, 'Internal Server Error during authentication');
+    }
 
     if (!user) {
       console.warn(`[AUTH] User not found for ID: ${decoded.id}`);

@@ -12,19 +12,21 @@ import {
   Repeat
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-
-const navItems = [
-  { icon: Home, label: 'Home', href: '/' },
-  { icon: Receipt, label: 'Ledger', href: '/transactions' },
-  { icon: Users, label: 'Debts', href: '/debts' },
-  { icon: MessageSquare, label: 'Chat', href: '/chat' },
-  { icon: Repeat, label: 'Exchange', href: '/exchange' },
-  { icon: PieChart, label: 'Reports', href: '/reports' },
-  { icon: Settings, label: 'Settings', href: '/settings' },
-];
+import { useTranslation } from 'react-i18next';
 
 export const MobileBottomNav = () => {
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { icon: Home, label: t('nav.home'), href: '/' },
+    { icon: Receipt, label: t('nav.ledger'), href: '/transactions' },
+    { icon: Users, label: t('nav.debts'), href: '/debts' },
+    { icon: MessageSquare, label: t('nav.chat'), href: '/chat' },
+    { icon: Repeat, label: t('nav.exchange'), href: '/exchange' },
+    { icon: PieChart, label: t('nav.reports'), href: '/reports' },
+    { icon: Settings, label: t('nav.settings'), href: '/settings' },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 pb-safe lg:hidden">

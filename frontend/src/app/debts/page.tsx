@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, CheckCircle, AlertCircle, Phone, CreditCard, X } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +10,7 @@ import { cn } from '@/utils/cn';
 import { Debt } from '@/types';
 
 export default function DebtsPage() {
+  const { t } = useTranslation();
   const { debts, isLoading, fetchDebts, addDebt, addPayment } = useFinanceStore();
   const [isAdding, setIsAdding] = useState(false);
   const [selectedDebtId, setSelectedDebtId] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export default function DebtsPage() {
                   : "bg-white text-slate-400 border border-slate-50 shadow-sm"
               )}
             >
-              {status}
+              {t(`debts.filter${status.charAt(0) + status.slice(1).toLowerCase()}`)}
             </button>
           ))}
         </div>
@@ -106,7 +108,7 @@ export default function DebtsPage() {
         <div className="flex flex-col bg-white overflow-hidden border-y border-slate-50">
           {filteredDebts.length === 0 && !isLoading ? (
             <div className="py-20 text-center">
-              <p className="text-[14px] text-slate-400">No debt records found</p>
+              <p className="text-[14px] text-slate-400">{t('debts.noRecords')}</p>
             </div>
           ) : (
             filteredDebts.map((debt, index) => (
@@ -142,11 +144,11 @@ export default function DebtsPage() {
                              debt.status === 'PAID' ? "text-emerald-600" : 
                              debt.status === 'OVERDUE' ? "text-rose-600" : "text-slate-400"
                            )}>
-                              {debt.status}
+                              {t(`debts.filter${debt.status.charAt(0).toUpperCase() + debt.status.slice(1).toLowerCase()}`)}
                            </span>
                         </div>
                         <p className="text-[11px] text-slate-400 shrink-0 italic">
-                          Due: {new Date(debt.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                          {t('debts.due')}: {new Date(debt.dueDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                         </p>
                       </div>
                     </div>
@@ -171,7 +173,7 @@ export default function DebtsPage() {
           <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex flex-col justify-end">
              <div className="bg-white rounded-t-[3rem] p-8 pb-12 animate-in slide-in-from-bottom duration-300">
                 <div className="flex items-center justify-between mb-8">
-                   <h2 className="text-lg font-black uppercase tracking-tight text-slate-900">New Debt</h2>
+                   <h2 className="text-lg font-black uppercase tracking-tight text-slate-900">{t('debts.newDebt')}</h2>
                    <button onClick={() => setIsAdding(false)} className="p-2 bg-slate-100 rounded-full text-slate-500">
                       <X size={20} />
                    </button>
@@ -246,8 +248,8 @@ export default function DebtsPage() {
           <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
              <div className="bg-white w-full max-w-sm rounded-[3rem] p-10 animate-in zoom-in-95 duration-200">
                 <div className="text-center space-y-2 mb-8">
-                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">Quick Pay</p>
-                   <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">Record Payment</h2>
+                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">{t('debts.quickPay')}</p>
+                   <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">{t('debts.recordPayment')}</h2>
                 </div>
                 
                 <form onSubmit={handleSubmitPayment} className="space-y-6">

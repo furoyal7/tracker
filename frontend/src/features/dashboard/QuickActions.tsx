@@ -6,15 +6,17 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/utils/cn';
+import { useTranslation } from 'react-i18next';
 
 export const QuickActions = () => {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const actions = [
-    { label: 'Sale', icon: Plus, color: 'text-blue-600', bg: 'bg-blue-50/50', href: '/transactions?type=INCOME' },
-    { label: 'Expense', icon: Minus, color: 'text-rose-600', bg: 'bg-rose-50/50', href: '/transactions?type=EXPENSE' },
-    { label: 'Debt', icon: UserPlus, color: 'text-amber-600', bg: 'bg-amber-50/50', href: '/debts?add=true' },
-    { label: 'Exchange', icon: Repeat, color: 'text-indigo-600', bg: 'bg-indigo-50/50', href: '/exchange/create' },
+    { label: t('quickActions.sale'), icon: Plus, color: 'text-blue-600', bg: 'bg-blue-50/50', href: '/transactions?type=INCOME' },
+    { label: t('quickActions.expense'), icon: Minus, color: 'text-rose-600', bg: 'bg-rose-50/50', href: '/transactions?type=EXPENSE' },
+    { label: t('quickActions.debt'), icon: UserPlus, color: 'text-amber-600', bg: 'bg-amber-50/50', href: '/debts?add=true' },
+    { label: t('quickActions.exchange'), icon: Repeat, color: 'text-indigo-600', bg: 'bg-indigo-50/50', href: '/exchange/create' },
   ];
 
   return (

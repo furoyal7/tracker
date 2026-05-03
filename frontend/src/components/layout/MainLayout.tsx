@@ -8,11 +8,13 @@ import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated, getCurrentUser, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (_hasHydrated) {
@@ -42,7 +44,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">New Message</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">{t('chat.newMessage')}</p>
                   <p className="text-sm font-bold text-slate-900 truncate">{message.senderName}</p>
                   <p className="text-xs text-slate-500 truncate">{message.text}</p>
                 </div>

@@ -6,9 +6,14 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.get('/conversations', chatController.getConversations);
-router.get('/conversations/:conversationId', chatController.getConversation);
-router.get('/messages/:conversationId', chatController.getMessages);
-router.post('/conversations', chatController.createConversation);
+// Chat specific paths (mounted under /chat)
+router.get('/list', chatController.getConversations);
+router.post('/create', chatController.createConversation);
+router.get('/:chatId', chatController.getConversation);
+router.post('/seen', chatController.markSeen);
+
+// Message specific paths (mounted under /message)
+router.get('/:chatId', chatController.getMessages);
+router.post('/send', chatController.sendMessage);
 
 export default router;

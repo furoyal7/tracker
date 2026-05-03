@@ -9,8 +9,10 @@ import exchangeService from '@/services/exchangeService';
 import { ExchangeOrder } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export default function ExchangeOrdersList() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [orders, setOrders] = useState<ExchangeOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,13 +35,13 @@ export default function ExchangeOrdersList() {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'pending': return { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', label: 'Pending' };
-      case 'proof_uploaded': return { icon: Search, color: 'text-blue-600', bg: 'bg-blue-50', label: 'Uploaded' };
-      case 'ready_for_confirmation': return { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'Verified' };
-      case 'under_review': return { icon: AlertCircle, color: 'text-orange-600', bg: 'bg-orange-50', label: 'Review' };
-      case 'confirmed': return { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', label: 'Confirmed' };
-      case 'rejected': return { icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50', label: 'Rejected' };
-      case 'completed': return { icon: CheckCircle2, color: 'text-blue-600', bg: 'bg-blue-50', label: 'Done' };
+      case 'pending': return { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', label: t('exchange.status.pending') };
+      case 'proof_uploaded': return { icon: Search, color: 'text-blue-600', bg: 'bg-blue-50', label: t('exchange.status.proof_uploaded') };
+      case 'ready_for_confirmation': return { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', label: t('exchange.status.ready_for_confirmation') };
+      case 'under_review': return { icon: AlertCircle, color: 'text-orange-600', bg: 'bg-orange-50', label: t('exchange.status.under_review') };
+      case 'confirmed': return { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', label: t('exchange.status.confirmed') };
+      case 'rejected': return { icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50', label: t('exchange.status.rejected') };
+      case 'completed': return { icon: CheckCircle2, color: 'text-blue-600', bg: 'bg-blue-50', label: t('exchange.status.completed') };
       default: return { icon: Clock, color: 'text-slate-400', bg: 'bg-slate-50', label: status };
     }
   };
@@ -59,12 +61,12 @@ export default function ExchangeOrdersList() {
         {/* Elite Header */}
         <div className="flex items-center justify-between px-1">
           <div className="space-y-1">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Order Ledger</h3>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Exchange</h1>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('exchange.orderLedger')}</h3>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">{t('exchange.title')}</h1>
           </div>
           <div className="bg-slate-900 text-white px-4 py-2 rounded-2xl flex items-center gap-2">
             <History size={14} className="text-slate-400" />
-            <span className="text-[10px] font-black uppercase tracking-widest">{orders.length} Sessions</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{orders.length} {t('exchange.sessions')}</span>
           </div>
         </div>
 
@@ -79,8 +81,8 @@ export default function ExchangeOrdersList() {
              <div className="bg-slate-50 p-6 rounded-[2.5rem]">
                <Repeat size={40} className="text-slate-300" />
              </div>
-             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300">No exchange history detected</p>
-             <Button onClick={() => router.push('/exchange/create')} className="bg-blue-600 rounded-2xl px-8">Initiate Session</Button>
+             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300">{t('exchange.noHistory')}</p>
+             <Button onClick={() => router.push('/exchange/create')} className="bg-blue-600 rounded-2xl px-8">{t('exchange.initiateSession')}</Button>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -105,7 +107,7 @@ export default function ExchangeOrdersList() {
                       </div>
                     </div>
                     <div className="text-right">
-                       <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Initiated</p>
+                       <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{t('exchange.initiated')}</p>
                        <p className="text-[9px] font-black text-slate-900 italic font-mono leading-none lowercase">
                          {new Date(order.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                        </p>
@@ -114,12 +116,12 @@ export default function ExchangeOrdersList() {
 
                   <div className="flex items-center justify-between py-4 bg-slate-50/50 rounded-2xl px-4 border border-slate-50">
                     <div className="flex flex-col">
-                       <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1.5">Deposit</span>
+                       <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1.5">{t('exchange.deposit')}</span>
                        <span className="text-lg font-black text-slate-900 leading-none">{order.amount} <span className="text-[10px] opacity-40">{order.fromCurrency}</span></span>
                     </div>
                     <ArrowRight size={14} className="text-slate-200" />
                     <div className="flex flex-col text-right">
-                       <span className="text-[7px] font-black text-blue-500 uppercase tracking-[0.2em] leading-none mb-1.5">Receive</span>
+                       <span className="text-[7px] font-black text-blue-500 uppercase tracking-[0.2em] leading-none mb-1.5">{t('exchange.receive')}</span>
                        <span className="text-lg font-black text-blue-600 leading-none">
                          {order.expectedReceiveAmount.toLocaleString()} <span className="text-[10px] opacity-40">{order.toCurrency}</span>
                        </span>

@@ -57,6 +57,7 @@ body {
   overflow-x: hidden;
   font-size: 16px; /* Base font size for mobile accessibility */
   line-height: 1.5;
+  font-family: var(--font-geist-sans), var(--font-noto-ethiopic), system-ui, sans-serif;
 }
 
 /* 📱 Mobile Optimized Scrolling & Overscroll */

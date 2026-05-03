@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Ethiopic } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import SocketInitializer from "@/components/socket/SocketInitializer";
+import { I18nProvider } from "@/components/providers/I18nProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,6 +14,11 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const notoEthiopic = Noto_Sans_Ethiopic({
+  variable: "--font-noto-ethiopic",
+  subsets: ["ethiopic", "latin"],
 });
 
 export const metadata: Metadata = {
@@ -25,26 +32,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-  const isValidClientId = googleClientId && !googleClientId.includes('placeholder');
-
+  
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoEthiopic.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans transition-colors duration-300 bg-background text-foreground">
         <GoogleOAuthProvider clientId={googleClientId}>
-          {children}
-          <Toaster 
-            position="top-center" 
-            expand={false} 
-            richColors 
-            closeButton
-            toastOptions={{
-              className: 'rounded-3xl border-none shadow-2xl font-sans',
-            }}
-          />
+          <I18nProvider>
+            <SocketInitializer />
+            {children}
+            <Toaster 
+              position="top-center" 
+              expand={false} 
+              richColors 
+              closeButton
+              toastOptions={{
+                className: 'rounded-3xl border-none shadow-2xl font-sans',
+              }}
+            />
+          </I18nProvider>
         </GoogleOAuthProvider>
       </body>
     </html>

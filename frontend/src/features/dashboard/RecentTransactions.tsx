@@ -4,9 +4,11 @@ import { useFinanceStore } from '@/store/financeStore';
 import { cn } from '@/utils/cn';
 import { Transaction } from '@/types';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const RecentTransactions = () => {
   const { transactions, isLoading } = useFinanceStore();
+  const { t, i18n } = useTranslation();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -64,7 +66,10 @@ export const RecentTransactions = () => {
                   {transaction.category}{transaction.note ? ` • ${transaction.note}` : ''}
                 </p>
                 <p className="text-[11px] text-slate-400 shrink-0">
-                  {new Date(transaction.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {new Intl.DateTimeFormat(i18n.language === 'am' ? 'am-ET' : 'en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  }).format(new Date(transaction.date))}
                 </p>
               </div>
             </div>

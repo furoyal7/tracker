@@ -8,6 +8,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   setAuth: (user: User, token: string) => void;
+  setUser: (user: User) => void;
   updatePasscode: (passcode: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
@@ -28,7 +29,12 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) => {
         localStorage.setItem('token', token);
         set({ user, token, isAuthenticated: true });
+        // Sync language if available
+        if (user.preferredLanguage) {
+          import('@/i18n/config').then(m => m.default.changeLanguage(user.preferredLanguage));
+        }
       },
+      setUser: (user) => set({ user }),
       updatePasscode: async (passcode: string) => {
         try {
           await api.post('/auth/passcode', { passcode });
@@ -70,6 +76,10 @@ export const useAuthStore = create<AuthState>()(
             user: state.user ? { ...state.user, ...response.data } : response.data,
             isAuthenticated: true
           }));
+          // Sync language preference from backend
+          if (response.data.preferredLanguage) {
+            import('@/i18n/config').then(m => m.default.changeLanguage(response.data.preferredLanguage));
+          }
         } catch (error: any) {
           // Only sign out if explicitly unauthorized (401)
           // We check the error message or status if the interceptor didn't already handle it

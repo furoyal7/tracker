@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { User as UserIcon, Menu, X, LayoutDashboard, Receipt, Package, Users, Repeat, MessageCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { usePathname } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import { LanguageToggle } from './LanguageToggle';
 
 export const MobileHeader = () => {
   const user = useAuthStore((state) => state.user);
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -18,12 +21,12 @@ export const MobileHeader = () => {
   });
 
   const menuItems = [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'Transactions', href: '/transactions', icon: Receipt },
-    { label: 'Inventory', href: '/inventory', icon: Package },
-    { label: 'Debts', href: '/debts', icon: Users },
-    { label: 'Exchange', href: '/exchange', icon: Repeat },
-    { label: 'Chat', href: '/chat', icon: MessageCircle },
+    { label: t('common.dashboard'), href: '/', icon: LayoutDashboard },
+    { label: t('common.transactions'), href: '/transactions', icon: Receipt },
+    { label: t('common.inventory'), href: '/inventory', icon: Package },
+    { label: t('common.debts'), href: '/debts', icon: Users },
+    { label: t('common.exchange'), href: '/exchange', icon: Repeat },
+    { label: t('common.chat'), href: '/chat', icon: MessageCircle },
   ];
 
   return (
@@ -38,10 +41,11 @@ export const MobileHeader = () => {
             >
               <Menu size={22} />
             </button>
-            <h1 className="text-[18px] font-bold text-slate-900 tracking-tight">Expenses</h1>
+            <h1 className="text-[18px] font-bold text-slate-900 tracking-tight italic">MoneyManager</h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <LanguageToggle />
             <Link href="/settings" className="active:scale-95 transition-all">
               <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100/50">
                 {user?.avatarUrl ? (

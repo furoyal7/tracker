@@ -1,19 +1,17 @@
 import { Server } from 'socket.io';
 import chatService from '../services/chatService.js';
 import prisma from '../lib/prisma.js';
-import { config } from '../config/env.js';
 import { verifyToken } from '../utils/jwt.js';
 
+const onlineUsers = new Map(); // userId -> Set(socketIds)
+
 const initSocket = (server) => {
-  const rawFrontendUrl = process.env.FRONTEND_URL || '';
-  const frontendUrl = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) : rawFrontendUrl;
-  
   const allowedOrigins = [
-    frontendUrl,
+    process.env.FRONTEND_URL,
     'https://tracker-kohl-seven.vercel.app',
     'http://localhost:3000',
     'http://127.0.0.1:3000'
-  ].filter(Boolean);
+  ].map(url => url?.endsWith('/') ? url.slice(0, -1) : url).filter(Boolean);
 
   const io = new Server(server, {
     cors: {
@@ -21,7 +19,7 @@ const initSocket = (server) => {
         if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
           callback(null, true);
         } else {
-          callback(null, false); // Decline but don't crash
+          callback(null, false);
         }
       },
       methods: ["GET", "POST"],
@@ -30,28 +28,20 @@ const initSocket = (server) => {
     pingTimeout: 60000,
   });
 
-  // Authentication Middleware for Sockets
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return next(new Error('Authentication error: No token provided'));
-      }
+      if (!token) return next(new Error('Authentication error: No token provided'));
 
       const decoded = verifyToken(token);
-      if (!decoded || !decoded.id) {
-        return next(new Error('Authentication error: Invalid token'));
-      }
+      if (!decoded || !decoded.id) return next(new Error('Authentication error: Invalid token'));
 
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
         select: { id: true, username: true, name: true }
       });
 
-      if (!user) {
-        return next(new Error('Authentication error: User not found'));
-      }
+      if (!user) return next(new Error('Authentication error: User not found'));
 
       socket.user = user;
       socket.userId = user.id;
@@ -61,43 +51,49 @@ const initSocket = (server) => {
     }
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     const userId = socket.userId;
-    console.log(`User connected: ${userId} (${socket.id})`);
+    
+    // Add to online users
+    if (!onlineUsers.has(userId)) {
+      onlineUsers.set(userId, new Set());
+      await chatService.updateUserStatus(userId, true);
+    }
+    onlineUsers.get(userId).add(socket.id);
+    
+    // Broadcast online users list
+    io.emit('onlineUsers', Array.from(onlineUsers.keys()));
 
-    // Join personal room for global events (new chat requests, etc.)
     socket.join(userId);
 
-    socket.on('join_conversation', (conversationId) => {
-      socket.join(conversationId);
-      console.log(`User ${userId} joined room: ${conversationId}`);
+    socket.on('joinChat', (chatId) => {
+      socket.join(chatId);
+      console.log(`User ${userId} joined chat: ${chatId}`);
     });
 
-    socket.on('leave_conversation', (conversationId) => {
-      socket.leave(conversationId);
-      console.log(`User ${userId} left room: ${conversationId}`);
+    socket.on('leaveChat', (chatId) => {
+      socket.leave(chatId);
+      console.log(`User ${userId} left chat: ${chatId}`);
     });
 
-    socket.on('send_message', async ({ conversationId, text }) => {
+    socket.on('sendMessage', async ({ chatId, text, attachments = [] }) => {
       try {
-        if (!text?.trim()) return;
+        if (!text?.trim() && attachments.length === 0) return;
 
-        const message = await chatService.saveMessage(conversationId, userId, text);
+        // Save to DB FIRST (as requested)
+        const message = await chatService.saveMessage(chatId, userId, text, attachments);
         
-        const messageWithSender = {
-          ...message,
-          senderName: socket.user.name || socket.user.username || 'Someone'
-        };
+        // Emit to the chat room
+        io.to(chatId).emit('receiveMessage', message);
 
-        // 1. Send to all users currently in the conversation room
-        io.to(conversationId).emit('receive_message', messageWithSender);
-
-        // 2. Notify the other participant globally (for notifications/list updates)
-        const conversation = await chatService.getConversation(conversationId);
-        if (conversation) {
-          const recipientId = conversation.creatorId === userId ? conversation.participantId : conversation.creatorId;
-          // Only send if recipient isn't already in the specific room (optional optimization)
-          socket.to(recipientId).emit('receive_message', messageWithSender);
+        // Notify participants who might not be in the room (for notifications)
+        const chat = await chatService.getConversation(chatId);
+        if (chat) {
+          chat.participants.forEach(participant => {
+            if (participant.id !== userId) {
+              socket.to(participant.id).emit('receiveMessage', message);
+            }
+          });
         }
       } catch (error) {
         console.error('[Socket] Error saving message:', error);
@@ -105,11 +101,29 @@ const initSocket = (server) => {
       }
     });
 
-    socket.on('typing', ({ conversationId }) => {
-      socket.to(conversationId).emit('user_typing', { userId, conversationId });
+    socket.on('typing', ({ chatId, isTyping }) => {
+      socket.to(chatId).emit('typing', { userId, chatId, isTyping });
     });
 
-    socket.on('disconnect', () => {
+    socket.on('markSeen', async ({ chatId, messageIds }) => {
+      try {
+        await chatService.markAsSeen(messageIds, userId);
+        socket.to(chatId).emit('messageSeen', { chatId, messageIds, userId });
+      } catch (error) {
+        console.error('[Socket] Error marking messages as seen:', error);
+      }
+    });
+
+    socket.on('disconnect', async () => {
+      const userSockets = onlineUsers.get(userId);
+      if (userSockets) {
+        userSockets.delete(socket.id);
+        if (userSockets.size === 0) {
+          onlineUsers.delete(userId);
+          await chatService.updateUserStatus(userId, false);
+          io.emit('onlineUsers', Array.from(onlineUsers.keys()));
+        }
+      }
       console.log(`User disconnected: ${userId}`);
     });
   });

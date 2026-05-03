@@ -33,7 +33,7 @@ export const FinancialChart = () => {
   }
 
   return (
-    <div className="w-full h-[350px] mt-6 relative" style={{ minWidth: '100%' }}>
+    <div className="w-full h-[350px] mt-6 relative" style={{ minWidth: '0', minHeight: '350px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>

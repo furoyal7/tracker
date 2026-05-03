@@ -10,6 +10,7 @@ import { useInventoryStore } from '@/store/inventoryStore';
 import { cn } from '@/utils/cn';
 import { Transaction } from '@/types';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 function TransactionsContent() {
   const { transactions, isLoading, fetchTransactions, addTransaction } = useFinanceStore();
@@ -18,6 +19,7 @@ function TransactionsContent() {
   const [isAdding, setIsAdding] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { t, i18n } = useTranslation();
   
   // Filter state
   const [startDate, setStartDate] = useState('');
@@ -78,14 +80,14 @@ function TransactionsContent() {
 
     const numericAmount = parseFloat(amount);
     if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
-      toast.error('Please enter a valid positive amount');
+      toast.error(t('transactions.validAmountError'));
       return;
     }
 
     try {
       // 1. Mandatory Field Validation
       if (type === 'INCOME' && !partyName) {
-        toast.error('Customer name is required for sales tracking');
+        toast.error(t('transactions.customerRequiredError'));
         return;
       }
 
@@ -95,7 +97,7 @@ function TransactionsContent() {
       }
 
       if (!category) {
-        toast.error('Please select or enter a category');
+        toast.error(t('transactions.categoryRequiredError'));
         return;
       }
 
@@ -118,7 +120,7 @@ function TransactionsContent() {
       console.log('[TRACE] Success Response Received:', result);
       setIsAdding(false);
       resetForm();
-      toast.success(`${type === 'INCOME' ? 'Sale' : 'Expense'} recorded successfully`);
+      toast.success(t(`transactions.${type.toLowerCase()}Recorded`));
     } catch (err: any) {
       if (err._isCancelled) return;
       console.error('[TRACE] Submission Failed:', err);
@@ -197,7 +199,7 @@ function TransactionsContent() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search records..."
+                placeholder={t('transactions.searchPlaceholder')}
                 className="w-full bg-white border border-slate-100 shadow-sm rounded-xl py-2.5 pl-10 pr-4 text-[12px] font-bold focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -223,11 +225,11 @@ function TransactionsContent() {
                  <div className="p-1.5 bg-blue-50 rounded-lg">
                   <Calendar size={12} className="text-blue-600" />
                  </div>
-                 <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-900">Custom Date Range</h4>
+                 <h4 className="text-[9px] font-black uppercase tracking-widest text-slate-900">{t('transactions.customDateRange')}</h4>
               </div>
               <div className="grid grid-cols-2 gap-3">
                  <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">Start</label>
+                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">{t('common.start')}</label>
                     <input 
                       type="date" 
                       value={startDate}
@@ -236,7 +238,7 @@ function TransactionsContent() {
                     />
                  </div>
                  <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">End</label>
+                    <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 px-1">{t('common.end')}</label>
                     <input 
                       type="date" 
                       value={endDate}
@@ -249,7 +251,7 @@ function TransactionsContent() {
                 onClick={handleApplyFilter}
                 className="w-full py-2.5 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all"
               >
-                Apply Filter
+                {t('transactions.applyFilter')}
               </button>
            </div>
         )}
@@ -258,7 +260,7 @@ function TransactionsContent() {
         <div className="flex flex-col bg-white overflow-hidden">
            {filteredTransactions.length === 0 && !isLoading ? (
              <div className="py-20 text-center">
-                <p className="text-[14px] text-slate-400">No transactions found</p>
+                <p className="text-[14px] text-slate-400">{t('transactions.noTransactions')}</p>
              </div>
            ) : (
              filteredTransactions.map((t, index) => (
@@ -299,7 +301,10 @@ function TransactionsContent() {
                             )}
                           </div>
                           <p className="text-[12px] text-slate-400 shrink-0">
-                            {new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            {new Intl.DateTimeFormat(i18n.language === 'am' ? 'am-ET' : 'en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            }).format(new Date(t.date))}
                           </p>
                         </div>
                       </div>
@@ -339,105 +344,105 @@ function TransactionsContent() {
                  <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8" />
                  
                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xl font-bold tracking-tight text-slate-900">New Entry</h2>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">{t('transactions.newEntry')}</h2>
                     <button onClick={() => setIsAdding(false)} className="p-2 text-slate-300">
                        <X size={24} />
                     </button>
                  </div>
  
-                 <form onSubmit={handleSubmit} className="space-y-8">
-                   <div className="flex items-center p-1 bg-slate-100 rounded-2xl w-full">
-                     {['INCOME', 'EXPENSE'].map((t) => (
-                       <button
-                         key={t}
-                         type="button"
-                         onClick={() => setType(t as any)}
-                         className={cn(
-                           "flex-1 py-3 text-[13px] font-bold rounded-xl transition-all",
-                           type === t 
-                             ? "bg-white text-blue-600 shadow-sm" 
-                             : "text-slate-500"
-                         )}
-                       >
-                         {t === 'INCOME' ? 'Income' : 'Expense'}
-                       </button>
-                     ))}
-                   </div>
+                   <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="flex items-center p-1 bg-slate-100 rounded-2xl w-full">
+                      {['INCOME', 'EXPENSE'].map((tVal) => (
+                        <button
+                          key={tVal}
+                          type="button"
+                          onClick={() => setType(tVal as any)}
+                          className={cn(
+                            "flex-1 py-3 text-[13px] font-bold rounded-xl transition-all",
+                            type === tVal 
+                              ? "bg-white text-blue-600 shadow-sm" 
+                              : "text-slate-500"
+                          )}
+                        >
+                          {t(`transactions.${tVal.toLowerCase()}`)}
+                        </button>
+                      ))}
+                    </div>
  
-                   <div className="space-y-6">
-                     <div className="space-y-2">
-                        <label className="text-[12px] font-bold text-slate-400 px-1">Amount</label>
-                        <div className="relative">
-                          <input 
-                            type="number" 
-                            inputMode="decimal"
-                            step="0.01"
-                            placeholder="0.00" 
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            onKeyDown={preventInvalidChars}
-                            required
-                            className="w-full bg-slate-50 border-none px-6 py-6 rounded-2xl text-3xl font-bold focus:ring-2 focus:ring-blue-100 outline-none"
-                          />
-                          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-300">$</span>
-                        </div>
-                     </div>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                         <label className="text-[12px] font-bold text-slate-400 px-1">{t('transactions.amount')}</label>
+                         <div className="relative">
+                           <input 
+                             type="number" 
+                             inputMode="decimal"
+                             step="0.01"
+                             placeholder="0.00" 
+                             value={amount}
+                             onChange={(e) => setAmount(e.target.value)}
+                             onKeyDown={preventInvalidChars}
+                             required
+                             className="w-full bg-slate-50 border-none px-6 py-6 rounded-2xl text-3xl font-bold focus:ring-2 focus:ring-blue-100 outline-none"
+                           />
+                           <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-bold text-slate-300">$</span>
+                         </div>
+                      </div>
  
-                     <div className="space-y-6 bg-slate-50/30 rounded-[2rem] p-2">
-                        <Input 
-                          label="Customer / Entity" 
-                          placeholder="Who is this for?" 
-                          value={partyName}
-                          onChange={(e) => setPartyName(e.target.value)}
-                          className="bg-white border-none px-4 py-4 rounded-xl"
-                        />
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                             <label className="text-[12px] font-bold text-slate-400 px-1">Category</label>
-                             <input 
-                               type="text" 
-                               value={category}
-                               onChange={(e) => setCategory(e.target.value)}
-                               placeholder="e.g., Business"
-                               className="w-full bg-white border-none p-4 rounded-xl text-[14px] font-medium outline-none focus:ring-2 focus:ring-blue-50"
-                               required
-                             />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[12px] font-bold text-slate-400 px-1">Payment Method</label>
-                             <select
-                               value={paymentMethod}
-                               onChange={(e) => setPaymentMethod(e.target.value)}
-                               className="w-full bg-white border-none p-4 rounded-xl text-[14px] font-medium outline-none focus:ring-2 focus:ring-blue-50"
-                             >
-                               <option value="CASH">Cash</option>
-                               <option value="BANK">Bank Transfer</option>
-                               <option value="CARD">Credit/Debit Card</option>
-                             </select>
-                          </div>
-                        </div>
+                      <div className="space-y-6 bg-slate-50/30 rounded-[2rem] p-2">
+                         <Input 
+                           label={t('transactions.customer')} 
+                           placeholder={t('transactions.customerPlaceholder')} 
+                           value={partyName}
+                           onChange={(e) => setPartyName(e.target.value)}
+                           className="bg-white border-none px-4 py-4 rounded-xl"
+                         />
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="space-y-2">
+                              <label className="text-[12px] font-bold text-slate-400 px-1">{t('transactions.category')}</label>
+                              <input 
+                                type="text" 
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                placeholder={t('transactions.categoryPlaceholder')}
+                                className="w-full bg-white border-none p-4 rounded-xl text-[14px] font-medium outline-none focus:ring-2 focus:ring-blue-50"
+                                required
+                              />
+                           </div>
+                           <div className="space-y-2">
+                              <label className="text-[12px] font-bold text-slate-400 px-1">{t('transactions.paymentMethod')}</label>
+                              <select
+                                value={paymentMethod}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                className="w-full bg-white border-none p-4 rounded-xl text-[14px] font-medium outline-none focus:ring-2 focus:ring-blue-50"
+                              >
+                                <option value="CASH">{t('transactions.cash')}</option>
+                                <option value="BANK">{t('transactions.bank')}</option>
+                                <option value="CARD">{t('transactions.card')}</option>
+                              </select>
+                           </div>
+                         </div>
  
-                        <Input 
-                          label="Notes (Optional)" 
-                          placeholder="Add details..." 
-                          value={note}
-                          onChange={(e) => setNote(e.target.value)}
-                          className="bg-white border-none px-4 py-4 rounded-xl"
-                        />
-                     </div>
-                   </div>
+                         <Input 
+                           label={t('transactions.notes')} 
+                           placeholder={t('transactions.notesPlaceholder')} 
+                           value={note}
+                           onChange={(e) => setNote(e.target.value)}
+                           className="bg-white border-none px-4 py-4 rounded-xl"
+                         />
+                      </div>
+                    </div>
  
-                   <div className="pt-4">
-                     <Button 
-                       type="submit" 
-                       isLoading={isLoading}
-                       className="w-full bg-blue-600 text-white py-8 rounded-3xl text-sm font-bold shadow-2xl shadow-blue-200 active:scale-95 transition-all"
-                     >
-                       Save Transaction
-                     </Button>
-                   </div>
-                 </form>
+                    <div className="pt-4">
+                      <Button 
+                        type="submit" 
+                        isLoading={isLoading}
+                        className="w-full bg-blue-600 text-white py-8 rounded-3xl text-sm font-bold shadow-2xl shadow-blue-200 active:scale-95 transition-all"
+                      >
+                        {t('transactions.save')}
+                      </Button>
+                    </div>
+                  </form>
               </div>
           </div>
         )}
@@ -447,8 +452,9 @@ function TransactionsContent() {
 }
 
 export default function TransactionsPage() {
+  const { t } = useTranslation();
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading Journal...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">{t('transactions.loadingJournal')}</div>}>
       <TransactionsContent />
     </Suspense>
   );
