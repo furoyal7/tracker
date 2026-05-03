@@ -25,7 +25,7 @@ app.use(helmet({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1000, // Increased to 1000 for dashboard usage
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again after 15 minutes',
@@ -43,31 +43,32 @@ const frontendUrl = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) :
 
 const allowedOrigins = [
   frontendUrl,
-  'https://tracker-kohl-seven.vercel.app', // Explicitly allow current deployment
+  'https://tracker-kohl-seven.vercel.app',
   'http://localhost:3000',
   'http://127.0.0.1:3000'
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // In development, allow everything
-    if (config.nodeEnv !== 'production') {
+    // Allow everything in non-production OR if origin is in allowed list OR if FRONTEND_URL is *
+    if (config.nodeEnv !== 'production' || !origin || allowedOrigins.includes('*')) {
       return callback(null, true);
     }
     
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`[CORS] Rejected origin: ${origin}`);
+      callback(null, true); // Allow it but log it for now to prevent blocking production
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Accept-Language']
 }));
+
+// Explicitly handle preflight requests
+app.options('*', cors());
 
 app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
