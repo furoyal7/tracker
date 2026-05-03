@@ -19,8 +19,8 @@ model User {
   preferredLanguage String       @default("en")
   age            Int?
   avatarUrl      String?
-  bio            String?
-  name           String?
+  bio            String?         @db.Text
+  name           String?         @db.Text
   username       String?         @unique
   debts          Debt[]
   exchangeOrders ExchangeOrder[]
@@ -35,15 +35,15 @@ model User {
 model Transaction {
   id        String          @id @default(uuid())
   amount    Float
-  category  String
+  category  String          @db.Text
   date      DateTime        @default(now())
-  note      String?
+  note      String?         @db.Text
   userId    String
   type      TransactionType
   productId String?
   quantity  Int?            @default(1)
-  paymentMethod String?
-  partyName     String?
+  paymentMethod String?     @db.Text
+  partyName     String?     @db.Text
   reference     String?
   product   Product?        @relation(fields: [productId], references: [id])
   user      User            @relation(fields: [userId], references: [id])
@@ -55,7 +55,7 @@ model Transaction {
 
 model Product {
   id           String        @id @default(uuid())
-  name         String
+  name         String        @db.Text
   quantity     Int           @default(0)
   costPrice    Float
   sellingPrice Float
@@ -74,7 +74,7 @@ model Debt {
   id              String     @id @default(uuid())
   dueDate         DateTime
   createdAt       DateTime   @default(now())
-  name            String
+  name            String     @db.Text
   remainingAmount Float
   totalAmount     Float
   type            DebtType
@@ -115,7 +115,7 @@ model Message {
   id             String       @id @default(uuid())
   conversationId String
   senderId       String
-  text           String
+  text           String       @db.Text
   attachments    String[]     @default([])
   createdAt      DateTime     @default(now())
   
@@ -169,9 +169,9 @@ model VerificationLog {
 model Sale {
   id              String      @id @default(uuid())
   userId          String
-  customerId      String?     // Optional for now
-  customerName    String?
-  customerPhone   String?
+  customerId      String?     @db.Text
+  customerName    String?     @db.Text
+  customerPhone   String?     @db.Text
   customerType    String?     // retail, wholesale, repeat
   branchId        String?     // identifier for multi-branch
   status          SaleStatus  @default(COMPLETED)
@@ -185,9 +185,9 @@ model Sale {
   amountPaid      Float
   balance         Float       @default(0)
   
-  channel         String      @default("IN_STORE")
-  reference       String?
-  notes           String?
+  channel         String      @default("IN_STORE") @db.Text
+  reference       String?     @db.Text
+  notes           String?     @db.Text
   
   items           SaleItem[]
   createdAt       DateTime    @default(now())
@@ -203,8 +203,8 @@ model Sale {
 model SaleItem {
   id              String   @id @default(uuid())
   saleId          String
-  productId       String?
-  productName     String
+  productId       String?     @db.Text
+  productName     String      @db.Text
   quantity        Int
   unitPrice       Float
   discount        Float    @default(0)

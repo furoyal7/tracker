@@ -92,6 +92,29 @@ app.get('/', (req, res) => {
   res.json({ message: 'Smart Business Money Manager API is running' });
 });
 
+// 🔍 DB ENCODING TEST ROUTE
+app.get('/api/debug/db-test', async (req, res) => {
+  try {
+    const testText = 'ሰላም እንዴት ነህ? (DB Test)';
+    // Use a temp product for testing if needed, or just return the text
+    console.log('[DEBUG] Testing DB with:', testText);
+    
+    // Test direct query
+    const dbEncoding = await prisma.$queryRaw`SHOW SERVER_ENCODING`;
+    const clientEncoding = await prisma.$queryRaw`SHOW CLIENT_ENCODING`;
+    
+    res.json({ 
+      success: true, 
+      sampleText: testText,
+      serverEncoding: dbEncoding,
+      clientEncoding: clientEncoding,
+      note: 'If you see correct Amharic characters above, the API + Header pipe is working. Check DB storage manually if needed.'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Error handling
 app.use(errorHandler);
 
