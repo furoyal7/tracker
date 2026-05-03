@@ -130,7 +130,11 @@ export interface FinancialSummary {
     income: number;
     expense: number;
   }[];
-  insights: string[];
+  insights: {
+    type: 'positive' | 'warning' | 'danger' | 'info';
+    title: string;
+    description: string;
+  }[];
   incomeDistribution: { label: string; value: number; amount: number }[];
   expenseDistribution: { label: string; value: number; amount: number }[];
   topSellingProducts: { id: string; name: string; quantity: number; revenue: number }[];

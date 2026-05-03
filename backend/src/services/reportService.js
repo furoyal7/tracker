@@ -99,22 +99,59 @@ export const getFinancialSummary = async (userId) => {
     // 5. Smart Insights
     const insights = [];
     
-    // Overdue debts
+    // Profit Margin Insight
+    const profitMargin = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
+    if (profitMargin > 20) {
+      insights.push({
+        type: 'positive',
+        title: 'Healthy Profit Margin',
+        description: `Your profit margin stands at ${profitMargin}%, which is a strong indicator of business efficiency.`
+      });
+    } else if (totalExpense > totalIncome && totalIncome > 0) {
+      insights.push({
+        type: 'danger',
+        title: 'Operating at a Loss',
+        description: `Warning: Your expenses exceed your income by $${totalExpense - totalIncome}. Consider reviewing major costs.`
+      });
+    }
+
+    // Debt Insight
+    if (totalPayable > 0 && totalReceivable > 0) {
+      const coverage = Math.round((totalReceivable / totalPayable) * 100);
+      insights.push({
+        type: 'info',
+        title: 'Debt Coverage Ratio',
+        description: `Your expected receivables cover ${coverage}% of your total payables.`
+      });
+    }
+
     const overdueCount = await prisma.debt.count({ where: { userId, status: 'OVERDUE' } });
     if (overdueCount > 0) {
-      insights.push(`You have ${overdueCount} overdue debt${overdueCount > 1 ? 's' : ''} that need attention.`);
+      insights.push({
+        type: 'warning',
+        title: 'Overdue Debts Detected',
+        description: `You have ${overdueCount} overdue debt${overdueCount > 1 ? 's' : ''} that need immediate attention to maintain liquidity.`
+      });
     }
 
     // Inventory Insights
     if (productsCount > 0) {
-      insights.push(`Danger! ${productsCount} items are completely out of stock.`);
+      insights.push({
+        type: 'danger',
+        title: 'Critical Stock Out',
+        description: `${productsCount} inventory items are completely out of stock. You may be losing potential sales.`
+      });
     }
 
     const lowStockCount = await prisma.product.count({
       where: { userId, quantity: { lte: 5, gt: 0 } }
     });
     if (lowStockCount > 0) {
-      insights.push(`Restock Alert: ${lowStockCount} items are running low.`);
+      insights.push({
+        type: 'warning',
+        title: 'Low Stock Alert',
+        description: `Restock needed: ${lowStockCount} items are running critically low.`
+      });
     }
 
     // 6. Distribution & Sales (Top Categories/Products)

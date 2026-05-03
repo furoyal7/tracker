@@ -19,10 +19,12 @@ import {
 import { useFinanceStore } from '@/store/financeStore';
 import { FinancialChart } from '@/features/dashboard/FinancialChart';
 import { cn } from '@/utils/cn';
+import { useAuthStore } from '@/store/authStore';
 
 export default function ReportsPage() {
   const { t } = useTranslation();
   const { summary } = useFinanceStore();
+  const { token } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
   const formatCurrency = (amount: number) => {
@@ -32,6 +34,33 @@ export default function ReportsPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleExport = async (type: 'pdf' | 'excel') => {
+    try {
+      if (!token) return alert('No token found');
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reports/export/${type}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `financial-report.${type === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to download report');
+    }
   };
 
   const performanceItems = [
@@ -76,6 +105,18 @@ export default function ReportsPage() {
               <h1 className="text-2xl font-black tracking-tight text-slate-900">{t('reports.title')}</h1>
            </div>
            <div className="flex space-x-2">
+              <button 
+                onClick={() => handleExport('pdf')}
+                className="h-10 px-4 bg-rose-50 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-rose-600 shadow-sm active:scale-95 transition-all flex items-center hover:bg-rose-100">
+                 <Download size={12} className="mr-2" />
+                 PDF
+              </button>
+              <button 
+                onClick={() => handleExport('excel')}
+                className="h-10 px-4 bg-emerald-50 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-emerald-600 shadow-sm active:scale-95 transition-all flex items-center hover:bg-emerald-100">
+                 <Download size={12} className="mr-2" />
+                 Excel
+              </button>
               <button className="h-10 px-4 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-sm active:scale-95 transition-all flex items-center">
                  <Calendar size={12} className="mr-2" />
                  {t('reports.last7Days')}
@@ -115,16 +156,38 @@ export default function ReportsPage() {
               <span className="text-[8px] font-black uppercase tracking-widest text-slate-300">{t('reports.liveUpdates')}</span>
             </div>
             <div className="flex space-x-3 overflow-x-auto no-scrollbar pb-2">
-              {summary.insights.map((insight, idx) => (
-                <div key={idx} className="flex-none w-[280px] bg-slate-50 border border-slate-100 p-5 rounded-[1.75rem] transition-all hover:bg-white hover:shadow-md group">
-                  <div className="flex items-start space-x-3">
-                    <div className="mt-1 p-1.5 bg-white rounded-lg shadow-sm">
-                      <Info size={14} className="text-slate-900" />
+              {summary.insights.map((insight, idx) => {
+                let iconColor = "text-blue-600 bg-blue-50 border-blue-100";
+                let badgeColor = "bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.3)]";
+                
+                if (insight.type === 'positive') {
+                  iconColor = "text-emerald-600 bg-emerald-50 border-emerald-100";
+                  badgeColor = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]";
+                } else if (insight.type === 'warning') {
+                  iconColor = "text-amber-600 bg-amber-50 border-amber-100";
+                  badgeColor = "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]";
+                } else if (insight.type === 'danger') {
+                  iconColor = "text-rose-600 bg-rose-50 border-rose-100";
+                  badgeColor = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.3)]";
+                }
+
+                return (
+                  <div key={idx} className="flex-none w-[300px] bg-white border border-slate-100 p-5 rounded-[1.75rem] transition-all hover:bg-slate-50 hover:shadow-md group relative overflow-hidden">
+                    <div className="flex flex-col space-y-3 relative z-10">
+                      <div className="flex items-start justify-between">
+                        <div className={`p-2 rounded-xl border ${iconColor}`}>
+                          <Info size={16} />
+                        </div>
+                        <div className={`mt-2 h-2 w-2 rounded-full ${badgeColor}`}></div>
+                      </div>
+                      <div>
+                        <h4 className="text-[12px] font-black text-slate-900 uppercase tracking-widest mb-1.5 leading-tight">{insight.title}</h4>
+                        <p className="text-[11px] font-medium text-slate-500 leading-relaxed">{insight.description}</p>
+                      </div>
                     </div>
-                    <p className="text-[11px] font-bold leading-relaxed text-slate-600">{insight}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

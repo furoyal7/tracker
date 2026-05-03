@@ -30,6 +30,7 @@ model User {
   conversations  Conversation[]  @relation("ConversationParticipants")
   messages       Message[]       @relation("MessageSender")
   seenMessages   Message[]       @relation("MessageSeenBy")
+  offlineActions OfflineAction[]
 }
 
 model Transaction {
@@ -51,6 +52,7 @@ model Transaction {
   @@index([userId])
   @@index([date])
   @@index([type])
+  @@index([category])
 }
 
 model Product {
@@ -272,4 +274,18 @@ enum ProofStatus {
 enum VerificationResult {
   matched
   mismatch
+}
+
+model OfflineAction {
+  id          String   @id @default(uuid())
+  actionType  String   // create, update, delete
+  entity      String   // transaction
+  payload     Json
+  status      String   @default("pending") // pending, synced, failed
+  createdAt   DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([status])
 }

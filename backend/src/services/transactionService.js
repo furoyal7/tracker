@@ -3,20 +3,27 @@ import * as productService from './productService.js';
 import ApiError from '../utils/ApiError.js';
 
 export const createTransaction = async (userId, transactionData) => {
-  const { productId, quantity = 0, amount, type, ...rest } = transactionData;
+  const { id, productId, quantity = 0, amount, type, ...rest } = transactionData;
 
   if (amount < 0) throw new ApiError(400, 'Amount cannot be negative');
   if (productId && quantity < 0) throw new ApiError(400, 'Quantity cannot be negative');
 
   try {
     return await prisma.$transaction(async (tx) => {
-      // If a product is linked, adjust stock
+      if (id) {
+        const existing = await tx.transaction.findUnique({ where: { id } });
+        if (existing) {
+          return existing;
+        }
+      }
+
       if (productId && type === 'INCOME') {
         await productService.adjustStock(productId, quantity, tx);
       }
 
       const transaction = await tx.transaction.create({
         data: {
+          ...(id && { id }),
           ...rest,
           amount: parseFloat(amount),
           type,

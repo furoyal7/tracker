@@ -29,17 +29,27 @@ export const InsightsBox = () => {
             </p>
           </div>
         ) : (
-          insights.map((insight, index) => (
-            <div 
-              key={index} 
-              className="flex items-start p-5 rounded-3xl bg-slate-50/50 border border-slate-50 active:bg-slate-50 transition-all"
-            >
-              <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-600 mr-4 shrink-0 shadow-[0_0_8px_rgba(37,99,235,0.2)]"></div>
-              <p className="text-xs font-bold text-slate-700 leading-relaxed uppercase tracking-tight">
-                {insight}
-              </p>
-            </div>
-          ))
+          insights.map((insight, index) => {
+            let iconColor = "bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.2)]";
+            if (insight.type === 'positive') iconColor = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]";
+            else if (insight.type === 'warning') iconColor = "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.2)]";
+            else if (insight.type === 'danger') iconColor = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.2)]";
+
+            return (
+              <div 
+                key={index} 
+                className="flex items-start p-5 rounded-3xl bg-slate-50/50 border border-slate-50 active:bg-slate-50 transition-all"
+              >
+                <div className={`mt-1.5 h-2 w-2 rounded-full ${iconColor} mr-4 shrink-0`}></div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">{insight.title}</h4>
+                  <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                    {insight.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

@@ -23,7 +23,8 @@ const menuItems = [
   { icon: Receipt, label: 'Transactions', href: '/transactions' },
   { icon: Users, label: 'Debts', href: '/debts' },
   { icon: Package, label: 'Inventory', href: '/inventory' },
-  { icon: PieChart, label: 'Reports', href: '/reports' },
+  { icon: PieChart, label: 'Analytics', href: '/analytics' },
+  { icon: Receipt, label: 'Reports', href: '/reports' },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 

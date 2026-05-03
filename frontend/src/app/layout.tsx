@@ -6,6 +6,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import SocketInitializer from "@/components/socket/SocketInitializer";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 
+import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -24,6 +26,7 @@ const notoEthiopic = Noto_Sans_Ethiopic({
 export const metadata: Metadata = {
   title: "MoneyManager | Merchant Portal",
   description: "Smart Business Money Manager for Merchants",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -47,6 +50,7 @@ export default function RootLayout({
         <GoogleOAuthProvider clientId={googleClientId}>
           <I18nProvider>
             <SocketInitializer />
+            <ServiceWorkerRegister />
             {children}
             <Toaster 
               position="top-center" 
