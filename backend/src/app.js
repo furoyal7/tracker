@@ -15,7 +15,16 @@ import logger from './utils/logger.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// 🔍 ENCODING VERIFICATION (AMHARIC)
+console.log('[SYSTEM] Encoding Check - Amharic: ሰላም እንዴት ነህ? (Hello, how are you?)');
+
 const app = express();
+
+// 1. GLOBAL UTF-8 ENCODING (CRITICAL FOR AMHARIC)
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  next();
+});
 
 // Middlewares
 app.use(helmet({

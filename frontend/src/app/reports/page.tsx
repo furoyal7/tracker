@@ -231,7 +231,14 @@ export default function ReportsPage() {
           </div>
         </section>
 
-        <div className="py-10 text-center">
+        <div className="py-10 text-center space-y-4">
+           {/* 🛡️ Encoding & Font Verification Section */}
+           <div className="mx-auto w-fit p-4 bg-blue-50/30 rounded-2xl border border-blue-100/50">
+             <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Encoding Verification</p>
+             <h2 className="text-xl font-black text-slate-900">ሰላም እንዴት ነህ?</h2>
+             <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">(Hello, how are you?)</p>
+           </div>
+           
            <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-200">{t('reports.systemIntelligence')} • {new Date().getFullYear()}</p>
         </div>
 

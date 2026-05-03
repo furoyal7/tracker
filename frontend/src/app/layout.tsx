@@ -39,7 +39,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${notoEthiopic.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full font-sans transition-colors duration-300 bg-background text-foreground">
+      <head>
+        <meta charSet="UTF-8" />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@100..900&display=swap" rel="stylesheet" />
+      </head>
+      <body className="min-h-full font-sans transition-colors duration-300 bg-background text-foreground" style={{ fontFamily: 'var(--font-geist-sans), var(--font-noto-ethiopic), "Noto Sans Ethiopic", sans-serif' }}>
         <GoogleOAuthProvider clientId={googleClientId}>
           <I18nProvider>
             <SocketInitializer />
