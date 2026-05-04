@@ -15,8 +15,6 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  };
-
   if (isLoading) {
     return (
       <MainLayout>
