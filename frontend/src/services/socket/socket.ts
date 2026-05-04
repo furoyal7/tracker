@@ -1,9 +1,22 @@
 import { io, Socket } from 'socket.io-client';
 
-let SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://127.0.0.1:5000';
+// Improved Socket URL inference for parity
+let SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '');
 
-if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && (SOCKET_URL.includes('localhost') || SOCKET_URL.includes('127.0.0.1'))) {
-  console.warn('Socket is pointing to local address in production environment.');
+if (!SOCKET_URL && typeof window !== 'undefined') {
+  if (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) {
+    SOCKET_URL = 'http://localhost:5000';
+  }
+}
+
+// Fallback
+SOCKET_URL = SOCKET_URL || 'http://localhost:5000';
+
+// Automatic HTTPS/WSS upgrade
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && SOCKET_URL.startsWith('http:')) {
+  if (!SOCKET_URL.includes('localhost') && !SOCKET_URL.includes('127.0.0.1')) {
+    SOCKET_URL = SOCKET_URL.replace('http:', 'https:');
+  }
 }
 
 class SocketService {

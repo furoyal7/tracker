@@ -97,6 +97,18 @@ export const ProductionDebugPanel = () => {
           </div>
 
           {/* Tips */}
+          {!process.env.NEXT_PUBLIC_API_URL && !window.location.hostname.includes('localhost') && (
+            <div className="bg-rose-900/20 p-3 rounded-xl border border-rose-900/30 mb-2">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle size={12} className="text-rose-400" />
+                <p className="text-[9px] font-black text-rose-400 uppercase">Warning: Config Missing</p>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                <code className="text-rose-300">NEXT_PUBLIC_API_URL</code> is not set. The app will fail to reach the live backend.
+              </p>
+            </div>
+          )}
+
           <div className="bg-blue-900/20 p-3 rounded-xl border border-blue-900/30">
             <div className="flex items-center gap-2 mb-1">
               <AlertCircle size={12} className="text-blue-400" />

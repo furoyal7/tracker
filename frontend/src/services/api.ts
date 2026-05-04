@@ -1,14 +1,32 @@
 import axios from 'axios';
 
-let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Enhanced API URL logic for production/local parity
+let API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL && typeof window !== 'undefined') {
+  // If no env var, try to infer from current domain
+  if (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) {
+    API_URL = 'http://localhost:5000/api';
+  } else {
+    // In production, we assume the API is at a similar domain or needs to be provided
+    // We'll fallback to a common pattern if needed, but alerting is better
+    console.warn('[API] NEXT_PUBLIC_API_URL is missing in production!');
+  }
+}
+
+// Default fallback
+API_URL = API_URL || 'http://localhost:5000/api';
+
+// Automatic HTTPS upgrade for production
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && API_URL.startsWith('http:')) {
+  if (!API_URL.includes('localhost') && !API_URL.includes('127.0.0.1')) {
+    API_URL = API_URL.replace('http:', 'https:');
+  }
+}
 
 // Ensure the API URL ends with /api
-if (API_URL.endsWith('/')) {
-  API_URL = API_URL.slice(0, -1);
-}
-if (!API_URL.endsWith('/api')) {
-  API_URL = `${API_URL}/api`;
-}
+if (API_URL.endsWith('/')) API_URL = API_URL.slice(0, -1);
+if (!API_URL.endsWith('/api')) API_URL = `${API_URL}/api`;
 
 const finalApiUrl = API_URL;
 
