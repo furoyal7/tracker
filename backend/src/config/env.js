@@ -1,10 +1,18 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'];
+const requiredEnvVars = [
+  'DATABASE_URL', 
+  'JWT_SECRET',
+  'FRONTEND_URL'
+];
+
 requiredEnvVars.forEach((varName) => {
   if (!process.env[varName]) {
-    console.error(`ERROR: Missing required environment variable: ${varName}`);
+    console.error('------------------------------------------------');
+    console.error(`❌ FATAL ERROR: Missing environment variable: ${varName}`);
+    console.error(`Check your .env file or production dashboard.`);
+    console.error('------------------------------------------------');
     process.exit(1);
   }
 });

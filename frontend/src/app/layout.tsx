@@ -7,6 +7,7 @@ import SocketInitializer from "@/components/socket/SocketInitializer";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 
 import ServiceWorkerRegister from "@/components/pwa/ServiceWorkerRegister";
+import { ProductionDebugPanel } from "@/components/debug/ProductionDebugPanel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({
             <SocketInitializer />
             <ServiceWorkerRegister />
             {children}
+            <ProductionDebugPanel />
             <Toaster 
               position="top-center" 
               expand={false} 

@@ -26,6 +26,15 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
+// 🛡️ Anti-Caching Middleware for Production
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -84,7 +93,40 @@ app.use('/api', routes);
 
 // Base route
 app.get('/', (req, res) => {
-  res.json({ message: 'Smart Business Money Manager API is running' });
+  res.json({ 
+    message: 'Smart Business Money Manager API is running',
+    status: 'ok',
+    version: 'v2.3.0-prod'
+  });
+});
+
+// 🏥 Health Check Endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    // Check DB connection
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      version: 'v2.3.0-prod',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      database: 'disconnected',
+      message: error.message
+    });
+  }
+});
+
+// 🔢 Version Endpoint
+app.get('/api/version', (req, res) => {
+  res.json({ 
+    version: 'v2.3.0-prod',
+    build_id: process.env.RENDER_GIT_COMMIT || 'local-dev'
+  });
 });
 
 // 🔍 DB ENCODING TEST ROUTE

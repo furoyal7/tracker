@@ -79,14 +79,14 @@ api.interceptors.response.use(
       message = 'Backend server unreachable. Please ensure the backend is running on port 5000.';
     }
     
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[API Error]', {
-        url: error.config?.url,
-        status: error.response?.status,
-        message: message,
-        originalError: error.message
-      });
-    }
+    // 🔍 PRODUCTION DEBUGGING: Log all API errors
+    console.error('[API Error Detail]', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: message,
+      timestamp: new Date().toISOString()
+    });
 
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
+import { getServerUrl } from '@/services/api';
 
 interface AnalyticsState {
   summary: any;
@@ -11,7 +12,7 @@ interface AnalyticsState {
   fetchAnalytics: () => Promise<void>;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = `${getServerUrl()}/api`;
 
 export const useAnalyticsStore = create<AnalyticsState>((set) => ({
   summary: null,

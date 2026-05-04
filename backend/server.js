@@ -14,6 +14,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('------------------------------------------------');
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 Network access via http://127.0.0.1:${PORT}`);
+  console.log(`📦 API VERSION: v2.3.0-prod`);
   console.log(`📅 Started at: ${new Date().toLocaleString()}`);
   console.log('------------------------------------------------');
 });

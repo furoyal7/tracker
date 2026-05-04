@@ -20,6 +20,7 @@ import { useFinanceStore } from '@/store/financeStore';
 import { FinancialChart } from '@/features/dashboard/FinancialChart';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/authStore';
+import { getServerUrl } from '@/services/api';
 
 export default function ReportsPage() {
   const { t } = useTranslation();
@@ -40,7 +41,7 @@ export default function ReportsPage() {
     try {
       if (!token) return alert('No token found');
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reports/export/${type}`, {
+      const response = await fetch(`${getServerUrl()}/api/reports/export/${type}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
