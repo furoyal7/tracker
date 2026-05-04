@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { formatCurrency } from '@/utils/currency';
 import { useTranslation } from 'react-i18next';
 import { Plus, CheckCircle, AlertCircle, Phone, CreditCard, X } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -65,13 +66,6 @@ export default function DebtsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   const filteredDebts = debts.filter((debt) => {
@@ -264,7 +258,7 @@ export default function DebtsPage() {
                         autoFocus
                         required
                       />
-                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">$</span>
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">ETB</span>
                    </div>
 
                    <div className="flex flex-col space-y-3">

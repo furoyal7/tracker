@@ -8,6 +8,7 @@ import chatRoutes from './chatRoutes.js';
 import exchangeRoutes from './exchangeRoutes.js';
 import userRoutes from './userRoutes.js';
 import saleRoutes from './saleRoutes.js';
+import insightRoutes from './insightRoutes.js';
 
 // Legacy routes that must be maintained
 import legacyReportRoutes from './reportRoutes.js';
@@ -31,6 +32,7 @@ router.use('/chat', chatRoutes);
 router.use('/message', chatRoutes);
 router.use('/exchange', exchangeRoutes);
 router.use('/users', userRoutes);
+router.use('/insights', insightRoutes);
 
 // New production-grade modules
 router.use('/analytics', analyticsModuleRoutes);

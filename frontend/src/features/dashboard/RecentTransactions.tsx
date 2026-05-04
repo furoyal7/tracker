@@ -5,19 +5,11 @@ import { cn } from '@/utils/cn';
 import { Transaction } from '@/types';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 export const RecentTransactions = () => {
   const { transactions, isLoading } = useFinanceStore();
   const { t, i18n } = useTranslation();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   if (isLoading && transactions.length === 0) {
     return (

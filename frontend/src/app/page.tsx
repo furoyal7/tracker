@@ -11,7 +11,7 @@ import { FinancialChart } from '@/features/dashboard/FinancialChart';
 import Link from 'next/link';
 import exchangeService from '@/services/exchangeService';
 import { ExchangeOrder } from '@/types';
-import { Repeat, Clock, ShieldCheck } from 'lucide-react';
+import { Repeat, Clock, ShieldCheck, Zap, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function DashboardPage() {
@@ -77,6 +77,31 @@ export default function DashboardPage() {
         <section className="space-y-3 px-4">
            <h3 className="text-[13px] font-bold uppercase tracking-widest text-slate-400">{t('dashboard.quickActions')}</h3>
            <QuickActions />
+        </section>
+
+        {/* 📊 Business Insights Preview */}
+        <section className="px-4">
+          <Link href="/insights">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-6 text-white shadow-lg shadow-blue-200 relative overflow-hidden group active:scale-[0.98] transition-all">
+               <div className="relative z-10">
+                  <div className="flex items-center space-x-2 mb-2">
+                     <div className="p-1.5 bg-white/20 rounded-lg">
+                        <Zap size={14} className="text-white" />
+                     </div>
+                     <span className="text-[10px] font-black uppercase tracking-widest text-blue-100">Intelligent Insights</span>
+                  </div>
+                  <h4 className="text-lg font-black leading-tight mb-1">Business Intelligence Engine</h4>
+                  <p className="text-[11px] text-blue-100/80 font-medium max-w-[200px]">Unlock growth trends, profit margins, and risk assessments for your business.</p>
+                  
+                  <div className="mt-4 flex items-center space-x-2">
+                     <span className="text-[10px] font-black uppercase tracking-widest bg-white/10 px-3 py-1.5 rounded-full">Explore Analytics</span>
+                  </div>
+               </div>
+               <div className="absolute -right-6 -bottom-6 opacity-10 group-hover:opacity-20 transition-opacity rotate-12">
+                  <Activity size={140} strokeWidth={4} />
+               </div>
+            </div>
+          </Link>
         </section>
 
         {/* 📉 Performance */}

@@ -11,6 +11,7 @@ import { cn } from '@/utils/cn';
 import { Transaction } from '@/types';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 function TransactionsContent() {
   const { transactions, isLoading, fetchTransactions, addTransaction } = useFinanceStore();
@@ -166,15 +167,6 @@ function TransactionsContent() {
       }
     }
   }, [quantity, productId, type, products]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const filteredTransactions = (transactions || []).filter((t: Transaction) => 
     t.category.toLowerCase().includes(searchQuery.toLowerCase()) || 

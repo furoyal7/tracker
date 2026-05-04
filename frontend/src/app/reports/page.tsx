@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { 
   TrendingUp, 
@@ -21,6 +22,7 @@ import { FinancialChart } from '@/features/dashboard/FinancialChart';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/authStore';
 import { getServerUrl } from '@/services/api';
+import { formatCurrency } from '@/utils/currency';
 
 export default function ReportsPage() {
   const { t } = useTranslation();
@@ -28,14 +30,6 @@ export default function ReportsPage() {
   const { token } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const handleExport = async (type: 'pdf' | 'excel') => {
     try {

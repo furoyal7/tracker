@@ -9,19 +9,11 @@ import {
 import { useFinanceStore } from '@/store/financeStore';
 import { cn } from '@/utils/cn';
 import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '@/utils/currency';
 
 export const DashboardSummary = () => {
   const { summary, isLoading } = useFinanceStore();
   const { t } = useTranslation();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   if (isLoading && !summary) {
     return (

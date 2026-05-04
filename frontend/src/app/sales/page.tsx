@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { formatCurrency } from '@/utils/currency';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { 
   ShoppingBag, 
@@ -139,12 +140,6 @@ export default function SalesPage() {
     }
   };
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(val);
   };
 
   const filteredProducts = products.filter(p => 
@@ -321,7 +316,7 @@ export default function SalesPage() {
                     />
                  </div>
                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span>{t('sales.discount')} ($)</span>
+                    <span>{t('sales.discount')} (ETB)</span>
                     <input 
                       type="number" 
                       className="w-16 bg-slate-50 border-none rounded-lg p-1 text-right text-slate-900 outline-none"

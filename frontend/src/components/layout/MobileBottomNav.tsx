@@ -9,6 +9,7 @@ import {
   PieChart, 
   MessageSquare,
   Repeat,
+  Activity,
   User
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -23,7 +24,7 @@ export const MobileBottomNav = () => {
     { icon: Receipt, label: t('nav.ledger'), href: '/transactions' },
     { icon: Users, label: t('nav.debts'), href: '/debts' },
     { icon: MessageSquare, label: t('nav.chat'), href: '/chat' },
-    { icon: Repeat, label: t('nav.exchange'), href: '/exchange' },
+    { icon: Activity, label: 'Insights', href: '/insights' },
     { icon: PieChart, label: t('nav.reports'), href: '/reports' },
     { icon: User, label: t('profile.tabs.overview'), href: '/profile' },
   ];

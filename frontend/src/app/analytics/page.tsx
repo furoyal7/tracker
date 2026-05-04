@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
+import { formatCurrency } from '@/utils/currency';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useAnalyticsStore } from '@/store/analyticsStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
@@ -14,12 +15,6 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
   };
 
   if (isLoading) {
@@ -81,7 +76,7 @@ export default function AnalyticsPage() {
               <LineChart data={monthlyGrowth?.history || []}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `$${val}`} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `${val} ETB`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   formatter={(value: any) => formatCurrency(Number(value))}
@@ -137,7 +132,7 @@ export default function AnalyticsPage() {
                 <BarChart data={profitMargin ? [{ name: 'Overview', Income: profitMargin.income, Expense: profitMargin.expense }] : []}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `$${val}`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `${val} ETB`} />
                   <Tooltip 
                     cursor={{ fill: 'transparent' }}
                     formatter={(value: any) => formatCurrency(Number(value))}

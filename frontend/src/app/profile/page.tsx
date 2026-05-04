@@ -90,13 +90,7 @@ export default function ProfilePage() {
     }
   }, [activeTab]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+import { formatCurrency } from '@/utils/currency';
 
   const calculateCompletion = () => {
     if (!user) return 0;
