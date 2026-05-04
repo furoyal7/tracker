@@ -66,8 +66,6 @@ export default function DebtsPage() {
     }
   };
 
-  };
-
   const filteredDebts = debts.filter((debt) => {
     const matchesStatus = filterStatus === 'ALL' || debt.status === filterStatus;
     const matchesSearch = debt.name.toLowerCase().includes(searchQuery.toLowerCase()) || 

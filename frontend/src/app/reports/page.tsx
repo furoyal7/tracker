@@ -22,7 +22,6 @@ import { FinancialChart } from '@/features/dashboard/FinancialChart';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/authStore';
 import { getServerUrl } from '@/services/api';
-import { formatCurrency } from '@/utils/currency';
 
 export default function ReportsPage() {
   const { t } = useTranslation();

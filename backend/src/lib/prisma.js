@@ -16,6 +16,7 @@ const pool = new pg.Pool({
 });
 
 // 🔍 DATABASE ENCODING VERIFICATION
+/*
 pool.query('SHOW SERVER_ENCODING', (err, res) => {
   if (err) {
     console.error('[DB] Failed to verify encoding:', err);
@@ -26,6 +27,7 @@ pool.query('SHOW SERVER_ENCODING', (err, res) => {
     }
   }
 });
+*/
 
 const adapter = new PrismaPg(pool);
 

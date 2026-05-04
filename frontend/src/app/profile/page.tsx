@@ -45,6 +45,7 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
+import { formatCurrency } from '@/utils/currency';
 
 // --- Types ---
 type TabType = 'overview' | 'business' | 'security' | 'activity' | 'settings';
@@ -90,7 +91,6 @@ export default function ProfilePage() {
     }
   }, [activeTab]);
 
-import { formatCurrency } from '@/utils/currency';
 
   const calculateCompletion = () => {
     if (!user) return 0;

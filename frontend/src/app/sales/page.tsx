@@ -140,8 +140,6 @@ export default function SalesPage() {
     }
   };
 
-  };
-
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );

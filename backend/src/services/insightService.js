@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma.js';
 import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
-
-const prisma = new PrismaClient();
 
 /**
  * Advanced Insights Engine
