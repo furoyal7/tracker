@@ -13,6 +13,12 @@ export const getProfile = async (userId) => {
       avatarUrl: true,
       role: true,
       preferredLanguage: true,
+      phone: true,
+      businessName: true,
+      businessType: true,
+      address: true,
+      isVerified: true,
+      status: true,
       createdAt: true
     }
   });
@@ -21,7 +27,6 @@ export const getProfile = async (userId) => {
 export const updateProfile = async (userId, profileData) => {
   const { username, name, age, bio, avatarUrl, preferredLanguage } = profileData;
 
-  // Check if username is already taken by another user
   if (username) {
     const existingUser = await prisma.user.findUnique({
       where: { username }
@@ -32,6 +37,8 @@ export const updateProfile = async (userId, profileData) => {
     }
   }
 
+  const { phone, businessName, businessType, address } = profileData;
+
   return prisma.user.update({
     where: { id: userId },
     data: {
@@ -40,7 +47,11 @@ export const updateProfile = async (userId, profileData) => {
       age: age ? parseInt(age) : null,
       bio,
       avatarUrl,
-      preferredLanguage
+      preferredLanguage,
+      phone,
+      businessName,
+      businessType,
+      address
     },
     select: {
       id: true,
@@ -52,6 +63,12 @@ export const updateProfile = async (userId, profileData) => {
       avatarUrl: true,
       role: true,
       preferredLanguage: true,
+      phone: true,
+      businessName: true,
+      businessType: true,
+      address: true,
+      isVerified: true,
+      status: true,
       createdAt: true
     }
   });
@@ -64,7 +81,48 @@ export const findByUsername = async (username) => {
       id: true,
       username: true,
       name: true,
-      avatarUrl: true
+    }
+  });
+};
+
+export const getActivityLogs = async (userId, limit = 20, offset = 0) => {
+  return prisma.activityLog.findMany({
+    where: { userId },
+    take: limit,
+    skip: offset,
+    orderBy: { createdAt: 'desc' }
+  });
+};
+
+export const createActivityLog = async (userId, actionType, metadata = {}) => {
+  return prisma.activityLog.create({
+    data: {
+      userId,
+      actionType,
+      metadata
+    }
+  });
+};
+
+export const getSessions = async (userId) => {
+  return prisma.session.findMany({
+    where: { userId },
+    orderBy: { lastActive: 'desc' }
+  });
+};
+
+export const deleteSession = async (userId, sessionId) => {
+  return prisma.session.delete({
+    where: { id: sessionId, userId }
+  });
+};
+
+export const createSession = async (userId, deviceInfo, ipAddress) => {
+  return prisma.session.create({
+    data: {
+      userId,
+      deviceInfo,
+      ipAddress
     }
   });
 };

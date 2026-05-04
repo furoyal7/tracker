@@ -72,13 +72,19 @@ api.interceptors.response.use(
       return Promise.reject({ _isCancelled: true, message: 'Request cancelled' });
     }
     
-    const message = error.response?.data?.message || error.message || 'Something went wrong';
+    let message = error.response?.data?.message || error.message || 'Something went wrong';
+    
+    // 🔍 ENHANCED NETWORK ERROR HANDLING
+    if (error.message === 'Network Error' && !error.response) {
+      message = 'Backend server unreachable. Please ensure the backend is running on port 5000.';
+    }
     
     if (process.env.NODE_ENV === 'development') {
       console.error('[API Error]', {
         url: error.config?.url,
         status: error.response?.status,
-        message: message
+        message: message,
+        originalError: error.message
       });
     }
 

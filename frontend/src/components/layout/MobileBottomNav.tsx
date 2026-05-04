@@ -7,9 +7,9 @@ import {
   Receipt, 
   Users, 
   PieChart, 
-  Settings,
   MessageSquare,
-  Repeat
+  Repeat,
+  User
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +25,7 @@ export const MobileBottomNav = () => {
     { icon: MessageSquare, label: t('nav.chat'), href: '/chat' },
     { icon: Repeat, label: t('nav.exchange'), href: '/exchange' },
     { icon: PieChart, label: t('nav.reports'), href: '/reports' },
-    { icon: Settings, label: t('nav.settings'), href: '/settings' },
+    { icon: User, label: t('profile.tabs.overview'), href: '/profile' },
   ];
 
   return (

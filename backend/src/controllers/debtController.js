@@ -1,4 +1,5 @@
 import * as debtService from '../services/debtService.js';
+import * as userService from '../services/userService.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { z } from 'zod';
 
@@ -16,6 +17,11 @@ export const createDebt = async (req, res) => {
   try {
     const validatedData = debtSchema.parse(req.body);
     const debt = await debtService.createDebt(req.user.id, validatedData);
+    await userService.createActivityLog(req.user.id, 'DEBT_CREATED', { 
+      type: debt.type, 
+      name: debt.name, 
+      amount: debt.totalAmount 
+    });
     return successResponse(res, debt, 'Debt created', 201);
   } catch (error) {
     if (error instanceof z.ZodError) {

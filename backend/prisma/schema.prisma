@@ -22,6 +22,14 @@ model User {
   bio            String?         @db.Text
   name           String?         @db.Text
   username       String?         @unique
+  phone          String?         @unique
+  businessName   String?         @db.Text
+  businessType   String?         @db.Text
+  address        String?         @db.Text
+  isVerified     Boolean         @default(false)
+  status         UserStatus      @default(ACTIVE)
+  sessions       Session[]
+  activityLogs   ActivityLog[]
   debts          Debt[]
   exchangeOrders ExchangeOrder[]
   products       Product[]
@@ -247,6 +255,35 @@ enum UserRole {
   MERCHANT
   CUSTOMER
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  userId     String
+  deviceInfo String?
+  ipAddress  String?
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  userId     String
+  actionType String   // LOGIN, TRANSACTION_CREATED, DEBT_UPDATED, PROFILE_UPDATED
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 enum ConversationType {

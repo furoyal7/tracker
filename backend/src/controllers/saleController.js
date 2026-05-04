@@ -1,9 +1,14 @@
 import * as saleService from '../services/saleService.js';
+import * as userService from '../services/userService.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 export const createSale = async (req, res) => {
   try {
     const sale = await saleService.createSale(req.user.id, req.body);
+    await userService.createActivityLog(req.user.id, 'SALE_CREATED', { 
+      total: sale.totalAmount, 
+      customer: sale.customerName 
+    });
     return successResponse(res, sale, 'Sale registered successfully', 201);
   } catch (error) {
     console.error('[SALE_CONTROLLER_ERROR]', error);

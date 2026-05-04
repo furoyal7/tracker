@@ -288,5 +288,58 @@
       "rejected": "Rejected",
       "completed": "Done"
     }
+  },
+  "profile": {
+    "title": "Profile Management",
+    "subtitle": "Elite Merchant Protocol",
+    "verified": "Verified Merchant",
+    "unverified": "Unverified",
+    "active": "Active",
+    "suspended": "Suspended",
+    "completion": "Profile Completion",
+    "totalBalance": "Total Balance",
+    "totalDebt": "Total Debt",
+    "monthlyProfit": "Monthly Profit",
+    "tabs": {
+      "overview": "Overview",
+      "business": "Business",
+      "security": "Security",
+      "activity": "Activity",
+      "settings": "Settings"
+    },
+    "overview": {
+      "revenue": "Revenue Trajectory",
+      "expenseBreakdown": "Expense Architecture",
+      "recentActivity": "Recent Logistics"
+    },
+    "business": {
+      "name": "Business Name",
+      "owner": "Owner Name",
+      "type": "Business Type",
+      "address": "Physical Address",
+      "phone": "Business Phone",
+      "email": "Business Email",
+      "save": "Synchronize Changes"
+    },
+    "security": {
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "twoFactor": "Two-Factor Auth (2FA)",
+      "sessions": "Active Sessions",
+      "device": "Device",
+      "lastActive": "Last Active",
+      "logoutOther": "Logout from Other Devices",
+      "deleteAccount": "Account Deletion",
+      "deleteWarning": "This action is irreversible. All financial records will be purged."
+    },
+    "activity": {
+      "filter": "Filter Logs",
+      "all": "All Activities",
+      "logins": "Login Sessions",
+      "transactions": "Transaction Logs",
+      "profile": "Profile Updates"
+    }
   }
 }

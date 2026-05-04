@@ -46,7 +46,7 @@ export const MobileHeader = () => {
 
           <div className="flex items-center gap-4">
             <LanguageToggle />
-            <Link href="/settings" className="active:scale-95 transition-all">
+            <Link href="/profile" className="active:scale-95 transition-all">
               <div className="h-9 w-9 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100/50">
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt="ME" className="h-full w-full object-cover" />

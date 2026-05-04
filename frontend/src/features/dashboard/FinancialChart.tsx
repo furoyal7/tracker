@@ -34,7 +34,7 @@ export const FinancialChart = () => {
 
   return (
     <div className="w-full h-[350px] mt-6 relative" style={{ minWidth: '0', minHeight: '350px' }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={0} minWidth={0}>
         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">

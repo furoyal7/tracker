@@ -11,5 +11,8 @@ router.get('/profile', userController.getProfile);
 router.get('/search', userController.searchUser);
 router.patch('/profile', userController.updateProfile);
 router.post('/avatar', upload.single('avatar'), userController.uploadAvatar);
+router.get('/activity', userController.getActivityLogs);
+router.get('/sessions', userController.getSessions);
+router.delete('/sessions/:sessionId', userController.logoutSession);
 
 export default router;

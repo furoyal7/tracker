@@ -155,3 +155,36 @@ export const updatePasscode = async (userId, passcode) => {
 
   return { success: true };
 };
+export const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.password) {
+    throw new Error('User not found or using social login');
+  }
+
+  const isMatch = await comparePassword(currentPassword, user.password);
+  if (!isMatch) {
+    throw new Error('Current password is incorrect');
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword }
+  });
+
+  return { success: true };
+};
+
+export const verifyPhone = async (userId, phone, otp) => {
+  // MOCK: In a real app, verify OTP from Redis/DB
+  if (otp !== '123456') {
+    throw new Error('Invalid OTP');
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { phone, isVerified: true }
+  });
+
+  return { success: true };
+};

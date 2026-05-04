@@ -10,8 +10,12 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 initSocket(server);
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('------------------------------------------------');
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📡 Network access via http://127.0.0.1:${PORT}`);
+  console.log(`📅 Started at: ${new Date().toLocaleString()}`);
+  console.log('------------------------------------------------');
 });
 
 // Graceful shutdown

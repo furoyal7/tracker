@@ -10,7 +10,13 @@ export interface User {
   age?: number;
   bio?: string;
   avatarUrl?: string;
-  role: 'USER' | 'ADMIN';
+  phone?: string;
+  businessName?: string;
+  businessType?: string;
+  address?: string;
+  isVerified?: boolean;
+  status?: 'ACTIVE' | 'SUSPENDED';
+  role: 'USER' | 'ADMIN' | 'MERCHANT' | 'CUSTOMER';
   passcode?: string;
   preferredLanguage: string;
   createdAt: string;

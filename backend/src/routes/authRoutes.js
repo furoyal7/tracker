@@ -33,5 +33,7 @@ router.post('/register', validate(registerSchema), authController.register);
 router.post('/login', validate(loginSchema), authController.login);
 router.post('/google', authController.googleAuth);
 router.post('/passcode', authMiddleware, validate(passcodeSchema), authController.updatePasscode);
+router.post('/change-password', authMiddleware, authController.changePassword);
+router.post('/verify-phone', authMiddleware, authController.verifyPhone);
 
 export default router;

@@ -288,5 +288,58 @@
       "rejected": "ተቀባይነት አላገኘም",
       "completed": "ተጠናቅቋል"
     }
+  },
+  "profile": {
+    "title": "የመገለጫ አስተዳደር",
+    "subtitle": "የላቀ የነጋዴ ፕሮቶኮል",
+    "verified": "የተረጋገጠ ነጋዴ",
+    "unverified": "ያልተረጋገጠ",
+    "active": "ንቁ",
+    "suspended": "የታገደ",
+    "completion": "የመገለጫ ሙላት",
+    "totalBalance": "ጠቅላላ ቀሪ ሂሳብ",
+    "totalDebt": "ጠቅላላ ዕዳ",
+    "monthlyProfit": "የወር ትርፍ",
+    "tabs": {
+      "overview": "አጠቃላይ እይታ",
+      "business": "የንግድ መረጃ",
+      "security": "ደህንነት",
+      "activity": "እንቅስቃሴ",
+      "settings": "ቅንብሮች"
+    },
+    "overview": {
+      "revenue": "የገቢ ጉዞ",
+      "expenseBreakdown": "የወጪ መዋቅር",
+      "recentActivity": "የቅርብ ጊዜ እንቅስቃሴዎች"
+    },
+    "business": {
+      "name": "የንግድ ስም",
+      "owner": "የባለቤቱ ስም",
+      "type": "የንግድ ዓይነት",
+      "address": "አድራሻ",
+      "phone": "የንግድ ስልክ",
+      "email": "የንግድ ኢሜይል",
+      "save": "ለውጦችን አመሳስል"
+    },
+    "security": {
+      "changePassword": "የይለፍ ቃል ቀይር",
+      "currentPassword": "የአሁኑ የይለፍ ቃል",
+      "newPassword": "አዲስ የይለፍ ቃል",
+      "confirmPassword": "አዲሱን የይለፍ ቃል አረጋግጥ",
+      "twoFactor": "ባለ ሁለት ደረጃ ማረጋገጫ (2FA)",
+      "sessions": "ንቁ ክፍለ-ጊዜዎች",
+      "device": "መሳሪያ",
+      "lastActive": "መጨረሻ የታየው",
+      "logoutOther": "ከሌሎች መሳሪያዎች ውጣ",
+      "deleteAccount": "መለያ ሰርዝ",
+      "deleteWarning": "ይህ ድርጊት የማይመለስ ነው። ሁሉም የፋይናንስ መዝገቦች ይጠፋሉ።"
+    },
+    "activity": {
+      "filter": "እንቅስቃሴዎችን አጣራ",
+      "all": "ሁሉም እንቅስቃሴዎች",
+      "logins": "የመግቢያ ክፍለ-ጊዜዎች",
+      "transactions": "የግብይት መዝገቦች",
+      "profile": "የመገለጫ ዝመናዎች"
+    }
   }
 }

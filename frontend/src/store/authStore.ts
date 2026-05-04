@@ -13,6 +13,11 @@ interface AuthState {
   updateProfile: (data: Partial<User>) => Promise<void>;
   uploadAvatar: (file: File) => Promise<void>;
   getCurrentUser: () => Promise<void>;
+  changePassword: (data: any) => Promise<void>;
+  verifyPhone: (data: any) => Promise<void>;
+  getActivityLogs: (limit?: number, offset?: number) => Promise<any[]>;
+  getSessions: () => Promise<any[]>;
+  logoutSession: (sessionId: string) => Promise<void>;
   logout: () => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
@@ -88,6 +93,26 @@ export const useAuthStore = create<AuthState>()(
             set({ user: null, token: null, isAuthenticated: false });
           }
         }
+      },
+      changePassword: async (data: any) => {
+        await api.post('/auth/change-password', data);
+      },
+      verifyPhone: async (data: any) => {
+        const response: any = await api.post('/auth/verify-phone', data);
+        set((state) => ({
+          user: state.user ? { ...state.user, ...response.data } : response.data
+        }));
+      },
+      getActivityLogs: async (limit = 20, offset = 0) => {
+        const response: any = await api.get(`/users/activity?limit=${limit}&offset=${offset}`);
+        return response.data;
+      },
+      getSessions: async () => {
+        const response: any = await api.get('/users/sessions');
+        return response.data;
+      },
+      logoutSession: async (sessionId: string) => {
+        await api.delete(`/users/sessions/${sessionId}`);
       },
       logout: () => {
         localStorage.removeItem('token');

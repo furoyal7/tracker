@@ -11,6 +11,7 @@ import routes from './routes/index.js';
 import { config } from './config/env.js';
 import { errorHandler } from './middlewares/error.js';
 import logger from './utils/logger.js';
+import prisma from './lib/prisma.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,12 +20,6 @@ const __dirname = path.dirname(__filename);
 console.log('[SYSTEM] Encoding Check - Amharic: ሰላም እንዴት ነህ? (Hello, how are you?)');
 
 const app = express();
-
-// 1. GLOBAL UTF-8 ENCODING (CRITICAL FOR AMHARIC)
-app.use((req, res, next) => {
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  next();
-});
 
 // Middlewares
 app.use(helmet({
