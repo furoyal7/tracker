@@ -96,7 +96,7 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Smart Business Money Manager API is running',
     status: 'ok',
-    version: 'v2.3.0-prod'
+    version: 'v3.0-PROD-RESET'
   });
 });
 
@@ -108,7 +108,7 @@ app.get('/api/health', async (req, res) => {
     res.json({
       status: 'ok',
       database: 'connected',
-      version: 'v2.3.0-prod',
+      version: 'v3.0-PROD-RESET',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development'
     });
@@ -124,8 +124,9 @@ app.get('/api/health', async (req, res) => {
 // 🔢 Version Endpoint
 app.get('/api/version', (req, res) => {
   res.json({ 
-    version: 'v2.3.0-prod',
-    build_id: process.env.RENDER_GIT_COMMIT || 'local-dev'
+    version: '3.0',
+    status: 'PRODUCTION-READY',
+    environment: process.env.NODE_ENV || 'production'
   });
 });
 

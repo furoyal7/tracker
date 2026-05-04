@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "migrate:prod": "prisma migrate deploy",
+    "reset:clean": "rm -rf node_modules package-lock.json && npm install && npm run prisma:generate",
     "postinstall": "npm run prisma:generate",
     "build": "npm run prisma:generate",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules npx jest"

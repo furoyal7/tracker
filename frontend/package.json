@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "reset:clean": "rm -rf .next node_modules package-lock.json && npm install && npm run build",
     "lint": "eslint"
   },
   "dependencies": {

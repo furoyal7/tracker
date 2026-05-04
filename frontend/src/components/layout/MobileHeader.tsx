@@ -41,7 +41,10 @@ export const MobileHeader = () => {
             >
               <Menu size={22} />
             </button>
-            <h1 className="text-[18px] font-bold text-slate-900 tracking-tight italic">MoneyManager</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[18px] font-bold text-slate-900 tracking-tight italic">MoneyManager</h1>
+              <span className="bg-emerald-100 text-emerald-600 text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter shadow-sm border border-emerald-200">v3.0</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

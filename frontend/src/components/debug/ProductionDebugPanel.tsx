@@ -38,12 +38,15 @@ export const ProductionDebugPanel = () => {
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <Terminal size={18} className="text-blue-400" />
-            <h3 className="text-xs font-black uppercase tracking-widest">System Diagnostics</h3>
+            <h3 className="text-xs font-black uppercase tracking-widest">System Diagnostics v3.0</h3>
           </div>
           <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white">✕</button>
         </div>
 
         <div className="space-y-4">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl mb-2">
+             <p className="text-[9px] font-black text-emerald-400 uppercase text-center">Status: Production Ready (v3.0)</p>
+          </div>
           {/* Environment */}
           <div className="space-y-1">
             <p className="text-[10px] text-slate-500 uppercase font-black">Environment</p>
