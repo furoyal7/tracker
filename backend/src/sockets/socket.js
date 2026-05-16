@@ -29,29 +29,42 @@ const initSocket = (server) => {
   });
 
   io.use(async (socket, next) => {
+    console.log(`[Socket] Connection attempt: ${socket.id}`);
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
-      if (!token) return next(new Error('Authentication error: No token provided'));
+      if (!token) {
+        console.warn(`[Socket] Auth failed: No token for ${socket.id}`);
+        return next(new Error('Authentication error: No token provided'));
+      }
 
       const decoded = verifyToken(token);
-      if (!decoded || !decoded.id) return next(new Error('Authentication error: Invalid token'));
+      if (!decoded || !decoded.id) {
+        console.warn(`[Socket] Auth failed: Invalid token for ${socket.id}`);
+        return next(new Error('Authentication error: Invalid token'));
+      }
 
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
         select: { id: true, username: true, name: true }
       });
 
-      if (!user) return next(new Error('Authentication error: User not found'));
+      if (!user) {
+        console.warn(`[Socket] Auth failed: User not found for ${socket.id}`);
+        return next(new Error('Authentication error: User not found'));
+      }
 
       socket.user = user;
       socket.userId = user.id;
+      console.log(`[Socket] Auth success: ${user.username} (${socket.id})`);
       next();
     } catch (error) {
+      console.error(`[Socket] Middleware error for ${socket.id}:`, error.message);
       next(new Error('Authentication error: ' + error.message));
     }
   });
 
   io.on('connection', async (socket) => {
+    console.log(`[Socket] Client fully connected: ${socket.id} (User: ${socket.userId})`);
     const userId = socket.userId;
     
     // Add to online users
@@ -80,24 +93,41 @@ const initSocket = (server) => {
       try {
         if (!text?.trim() && attachments.length === 0) return;
 
-        // Save to DB FIRST (as requested)
+        // Save to DB FIRST
         const message = await chatService.saveMessage(chatId, userId, text, attachments);
         
-        // Emit to the chat room
+        // Emit to the chat room (includes sender if they joined)
         io.to(chatId).emit('receiveMessage', message);
 
         // Notify participants who might not be in the room (for notifications)
+        // We use individual rooms (userId) for this
         const chat = await chatService.getConversation(chatId);
         if (chat) {
           chat.participants.forEach(participant => {
             if (participant.id !== userId) {
-              socket.to(participant.id).emit('receiveMessage', message);
+              // Check if participant is in the room. If not, emit to their private room
+              const socketsInRoom = io.sockets.adapter.rooms.get(chatId);
+              const isParticipantInRoom = Array.from(onlineUsers.get(participant.id) || []).some(sid => socketsInRoom?.has(sid));
+              
+              if (!isParticipantInRoom) {
+                io.to(participant.id).emit('receiveMessage', message);
+              }
             }
           });
         }
       } catch (error) {
         console.error('[Socket] Error saving message:', error);
         socket.emit('error', { message: 'Failed to send message' });
+      }
+    });
+
+    socket.on('deleteMessage', async ({ chatId, messageId }) => {
+      try {
+        // Implement deletion logic in service if needed, or just broadcast
+        // For now, let's just broadcast the deletion event
+        socket.to(chatId).emit('messageDeleted', { chatId, messageId });
+      } catch (error) {
+        console.error('[Socket] Error deleting message:', error);
       }
     });
 

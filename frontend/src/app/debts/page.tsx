@@ -57,7 +57,6 @@ export default function DebtsPage() {
       setSelectedDebtId(null);
       setPaymentAmount('');
     }
-    setIsAdding(true);
   };
 
   const preventInvalidChars = (e: React.KeyboardEvent) => {

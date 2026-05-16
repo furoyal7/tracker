@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api from '@/services/api';
 import { socketService } from '@/services/socket/socket';
+import { useAuthStore } from '@/store/authStore';
 
 interface Message {
   id: string;
@@ -39,6 +40,7 @@ interface ChatState {
   messages: Record<string, Message[]>; // chatId -> messages
   onlineUsers: string[];
   typingUsers: Record<string, string[]>; // chatId -> userIds
+  unreadCounts: Record<string, number>; // chatId -> count
   loading: boolean;
 
   // Actions
@@ -58,13 +60,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: {},
   onlineUsers: [],
   typingUsers: {},
+  unreadCounts: {},
   loading: false,
 
   fetchConversations: async () => {
     set({ loading: true });
     try {
       const response: any = await api.get('/chat/list');
-      set({ conversations: response.data || [] });
+      const conversations = response.data || [];
+      
+      // Calculate unread counts
+      const unreadCounts: Record<string, number> = {};
+      const authStore = useAuthStore?.getState?.();
+      const user = authStore?.user;
+      
+      conversations.forEach((chat: Chat) => {
+        const lastMsg = chat.messages?.[0];
+        if (lastMsg && lastMsg.senderId !== user?.id && !lastMsg.seenBy?.some(p => p.id === user?.id)) {
+          unreadCounts[chat.id] = (unreadCounts[chat.id] || 0) + 1;
+        }
+      });
+
+      set({ conversations, unreadCounts });
     } catch (error: any) {
       if (error._isCancelled) return;
       console.error('Failed to fetch conversations', error);
@@ -91,6 +108,39 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setActiveChat: (chatId) => set({ activeChatId: chatId }),
 
   sendMessage: async (chatId, text, attachments = []) => {
+    const authStore = useAuthStore?.getState?.();
+    const user = authStore?.user;
+
+    if (!user) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage: Message = {
+      id: tempId,
+      chatId,
+      senderId: user.id,
+      text,
+      attachments,
+      createdAt: new Date().toISOString(),
+      seenBy: [{ id: user.id }],
+      sender: {
+        id: user.id,
+        username: user.username || '',
+        name: user.name || '',
+        avatarUrl: user.avatarUrl || ''
+      }
+    };
+
+    // Add optimistically
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [chatId]: [...(state.messages[chatId] || []), optimisticMessage]
+      },
+      conversations: state.conversations.map(c => 
+        c.id === chatId ? { ...c, updatedAt: optimisticMessage.createdAt, messages: [optimisticMessage] } : c
+      ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    }));
+
     const socket = socketService.getSocket();
     if (socket) {
       socket.emit('sendMessage', { chatId, text, attachments });
@@ -98,20 +148,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   receiveMessage: (message) => {
+    const { activeChatId } = get();
+    const authStore = useAuthStore?.getState?.();
+    const user = authStore?.user;
+
+
     set((state) => {
       const chatMessages = state.messages[message.chatId] || [];
-      // Prevent duplicates
-      if (chatMessages.find((m) => m.id === message.id)) return state;
+      
+      // Handle optimistic message replacement if it's from current user
+      let updatedMessages;
+      if (message.senderId === user?.id) {
+        // Find if there's a temp message with same text (approximate match)
+        const tempMsgIndex = chatMessages.findIndex(m => m.id.startsWith('temp-') && m.text === message.text);
+        if (tempMsgIndex !== -1) {
+          updatedMessages = [...chatMessages];
+          updatedMessages[tempMsgIndex] = message;
+        } else {
+          updatedMessages = chatMessages.find(m => m.id === message.id) ? chatMessages : [...chatMessages, message];
+        }
+      } else {
+        updatedMessages = chatMessages.find(m => m.id === message.id) ? chatMessages : [...chatMessages, message];
+      }
+
+      // Update unread count if chat is not active
+      const newUnreadCounts = { ...state.unreadCounts };
+      if (activeChatId !== message.chatId && message.senderId !== user?.id) {
+        newUnreadCounts[message.chatId] = (newUnreadCounts[message.chatId] || 0) + 1;
+      }
 
       return {
         messages: {
           ...state.messages,
-          [message.chatId]: [...chatMessages, message]
+          [message.chatId]: updatedMessages
         },
+        unreadCounts: newUnreadCounts,
         // Update conversation last message/updatedAt
         conversations: state.conversations.map((c) => 
           c.id === message.chatId 
-            ? { ...c, updatedAt: message.createdAt } 
+            ? { ...c, updatedAt: message.createdAt, messages: [message] } 
             : c
         ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       };
@@ -142,11 +217,41 @@ export const useChatStore = create<ChatState>((set, get) => ({
       socket.emit('markSeen', { chatId, messageIds });
     }
     
-    // Optimistic update
     set((state) => {
+      const authStore = useAuthStore?.getState?.();
+      const user = authStore?.user;
+      if (!user) return state;
+
       const chatMessages = state.messages[chatId] || [];
-      // This is simplified, real logic would update seenBy array
-      return state;
+      const updatedMessages = chatMessages.map(m => {
+        if (messageIds.includes(m.id)) {
+          const alreadySeen = m.seenBy.some(p => p.id === user.id);
+          if (!alreadySeen) {
+            return { ...m, seenBy: [...m.seenBy, { id: user.id }] };
+          }
+        }
+        return m;
+      });
+
+      return {
+        messages: {
+          ...state.messages,
+          [chatId]: updatedMessages
+        },
+        unreadCounts: {
+          ...state.unreadCounts,
+          [chatId]: 0
+        }
+      };
     });
+  },
+
+  deleteMessage: (chatId, messageId) => {
+    set((state) => ({
+      messages: {
+        ...state.messages,
+        [chatId]: (state.messages[chatId] || []).filter(m => m.id !== messageId)
+      }
+    }));
   }
 }));

@@ -6,6 +6,7 @@ export const getSummary = async (req, res) => {
     const summary = await reportService.getFinancialSummary(req.user.id);
     return successResponse(res, summary, 'Financial summary retrieved');
   } catch (error) {
-    return errorResponse(res, error.message, 400);
+    console.error(`[Report Controller Error] ${error.message}`, error);
+    return errorResponse(res, error.message, error.statusCode || 500);
   }
 };

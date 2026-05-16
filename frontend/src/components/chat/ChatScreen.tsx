@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, Send, Check, CheckCheck } from 'lucide-react';
+import { ChevronLeft, Send, Check, CheckCheck, Paperclip, Image as ImageIcon, Smile, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
@@ -94,8 +94,13 @@ export default function ChatScreen({
           {isTyping ? (
             <p className="text-[10px] text-[#25d366] animate-pulse font-bold uppercase tracking-widest">{t('chat.typing')}</p>
           ) : (
-            <p className="text-[10px] text-white/70 font-medium">{isOnline ? t('chat.online') : t('chat.offline')}</p>
+            <p className="text-[10px] text-white/70 font-medium">
+              {isOnline ? t('chat.online') : t('chat.offline')}
+            </p>
           )}
+        </div>
+        <div className="flex items-center gap-3 ml-2">
+          <MoreVertical className="w-5 h-5 cursor-pointer opacity-80 hover:opacity-100" />
         </div>
       </div>
 
@@ -104,6 +109,7 @@ export default function ChatScreen({
         {messages.map((msg) => {
           const isMe = msg.senderId === currentUserId;
           const isSeen = msg.seenBy?.some(p => p.id !== currentUserId);
+          const isTemp = msg.id.startsWith('temp-');
           
           return (
             <div
@@ -115,16 +121,29 @@ export default function ChatScreen({
                   isMe
                     ? 'bg-[#dcf8c6] text-gray-900 rounded-tr-none'
                     : 'bg-white text-gray-900 rounded-tl-none'
-                }`}
+                } ${isTemp ? 'opacity-70' : ''}`}
               >
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="mb-2 grid grid-cols-1 gap-1">
+                    {msg.attachments.map((url, i) => (
+                      <img key={i} src={url} alt="attachment" className="rounded-lg max-h-60 w-full object-cover cursor-pointer hover:brightness-95 transition-all" />
+                    ))}
+                  </div>
+                )}
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                 <div className="flex justify-end items-center gap-1 mt-0.5">
                   <span className="text-[9px] font-medium text-gray-500/80 uppercase">
                     {format(new Date(msg.createdAt), 'HH:mm')}
                   </span>
                   {isMe && (
-                    <span className={isSeen ? 'text-blue-500' : 'text-gray-400'}>
-                      {isSeen ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+                    <span className={isSeen ? 'text-[#34b7f1]' : 'text-gray-400'}>
+                      {isTemp ? (
+                        <div className="w-3 h-3 border border-gray-300 border-t-transparent rounded-full animate-spin" />
+                      ) : isSeen ? (
+                        <CheckCheck className="w-3 h-3" />
+                      ) : (
+                        <Check className="w-3 h-3" />
+                      )}
                     </span>
                   )}
                 </div>
@@ -144,23 +163,33 @@ export default function ChatScreen({
       </div>
 
       {/* Premium Input Area */}
-      <div className="bg-[#f0f2f5] p-3 flex items-center gap-2 border-t border-gray-200/50">
-        <form onSubmit={handleSend} className="flex-1 flex gap-2">
-          <input
-            type="text"
-            value={inputText}
-            onChange={handleInputChange}
-            placeholder={t('chat.typeMessage')}
-            className="flex-1 bg-white px-5 py-3 rounded-2xl text-sm outline-none shadow-sm border border-transparent focus:border-[#25d366]/30 transition-all placeholder:text-gray-400"
-          />
-          <button
-            type="submit"
-            disabled={!inputText.trim()}
-            className="w-12 h-12 bg-[#128c7e] text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:grayscale transition-all active:scale-90"
-          >
-            <Send className="w-5 h-5 ml-0.5" />
+      <div className="bg-[#f0f2f5] p-3 flex flex-col gap-2 border-t border-gray-200/50">
+        <div className="flex items-center gap-2">
+          <button className="p-2 text-gray-500 hover:text-[#075e54] transition-colors">
+            <Smile className="w-6 h-6" />
           </button>
-        </form>
+          <button className="p-2 text-gray-500 hover:text-[#075e54] transition-colors relative group">
+            <Paperclip className="w-6 h-6" />
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={() => alert('File upload coming soon in V4.0')} />
+          </button>
+          
+          <form onSubmit={handleSend} className="flex-1 flex gap-2">
+            <input
+              type="text"
+              value={inputText}
+              onChange={handleInputChange}
+              placeholder={t('chat.typeMessage')}
+              className="flex-1 bg-white px-5 py-3 rounded-2xl text-sm outline-none shadow-sm border border-transparent focus:border-[#25d366]/30 transition-all placeholder:text-gray-400"
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim()}
+              className="w-12 h-12 bg-[#128c7e] text-white rounded-full flex items-center justify-center shadow-lg disabled:opacity-50 disabled:grayscale transition-all active:scale-90"
+            >
+              <Send className="w-5 h-5 ml-0.5" />
+            </button>
+          </form>
+        </div>
       </div>
       
       <style jsx>{`

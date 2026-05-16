@@ -35,7 +35,7 @@ class SocketService {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
     });
 
     this.socket.on('connect', () => {

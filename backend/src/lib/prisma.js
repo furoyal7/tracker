@@ -7,12 +7,17 @@ dotenv.config();
 
 const pool = new pg.Pool({ 
   connectionString: process.env.DATABASE_URL,
-  max: 10,
+  max: 20, // Increased for concurrent queries
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  ssl: {
-    rejectUnauthorized: false // Required for Neon PostgreSQL
-  }
+  ssl: process.env.NODE_ENV === 'production' 
+    ? { rejectUnauthorized: false }
+    : { rejectUnauthorized: false } // Always false for Neon if not providing CA
+});
+
+// 🔍 POOL ERROR HANDLING
+pool.on('error', (err) => {
+  console.error('[DB Pool Error] Unexpected error on idle client:', err.message);
 });
 
 // 🔍 DATABASE ENCODING VERIFICATION

@@ -69,14 +69,15 @@ export const deleteDebt = async (userId, id) => {
 };
 
 export const updateDebtStatus = async (debtId, tx = prisma) => {
-  const debt = await tx.debt.findUnique({
-    where: { id: debtId },
-    include: { payments: true },
-  });
+  // Fetch debt and payments separately to ensure transaction consistency
+  const [debt, payments] = await Promise.all([
+    tx.debt.findUnique({ where: { id: debtId } }),
+    tx.payment.findMany({ where: { debtId } })
+  ]);
 
   if (!debt) throw new ApiError(404, `Debt ${debtId} not found`);
 
-  const totalPaid = debt.payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+  const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
   const remainingAmount = Math.max(0, parseFloat(debt.totalAmount) - totalPaid);
   
   let status = debt.status;

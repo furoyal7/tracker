@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 export default function ChatListPage() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [newParticipant, setNewParticipant] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [foundUser, setFoundUser] = useState<any>(null);
   const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -66,6 +67,17 @@ export default function ChatListPage() {
       setCreating(false);
     }
   };
+  
+  const filteredConversations = conversations.filter(chat => {
+    if (!searchQuery.trim()) return true;
+    const search = searchQuery.toLowerCase();
+    return chat.participants.some(p => 
+      p.id !== user?.id && (
+        (p.name && p.name.toLowerCase().includes(search)) || 
+        (p.username && p.username.toLowerCase().includes(search))
+      )
+    );
+  });
 
   return (
     <div className="flex flex-col h-screen bg-white max-w-md mx-auto shadow-xl relative overflow-hidden">
@@ -98,6 +110,8 @@ export default function ChatListPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('chat.searchPlaceholder')}
             className="w-full bg-gray-50 border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-[#25d366] transition-all"
           />
@@ -116,7 +130,7 @@ export default function ChatListPage() {
             <p className="text-xs font-bold text-[#075e54] uppercase tracking-widest animate-pulse">{t('chat.syncing')}</p>
           </div>
         ) : (
-          <ChatList conversations={conversations} />
+          <ChatList conversations={filteredConversations} />
         )}
       </div>
 

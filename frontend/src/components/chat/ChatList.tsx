@@ -13,7 +13,7 @@ interface ChatListProps {
 
 export default function ChatList({ conversations }: ChatListProps) {
   const { user: currentUser } = useAuthStore();
-  const { onlineUsers } = useChatStore();
+  const { onlineUsers, unreadCounts, typingUsers } = useChatStore();
   const { t } = useTranslation();
 
   const formatDate = (date: string) => {
@@ -43,6 +43,8 @@ export default function ChatList({ conversations }: ChatListProps) {
           const lastMessage = chat.messages?.[0];
           const displayName = otherUser.name || otherUser.username;
           const isOnline = onlineUsers.includes(otherUser.id) || otherUser.isOnline;
+          const unreadCount = unreadCounts[chat.id] || 0;
+          const isTyping = typingUsers[chat.id]?.some(id => id !== currentUser?.id);
           
           return (
             <Link
@@ -72,11 +74,18 @@ export default function ChatList({ conversations }: ChatListProps) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 truncate font-medium">
-                    {lastMessage ? lastMessage.text : t('chat.noMessages')}
+                  <p className={`text-sm truncate font-medium ${unreadCount > 0 ? 'text-gray-900 font-bold' : 'text-gray-500'}`}>
+                    {isTyping ? (
+                      <span className="text-[#25d366] italic">{t('chat.typing')}</span>
+                    ) : (
+                      lastMessage ? lastMessage.text : t('chat.noMessages')
+                    )}
                   </p>
-                  {/* Unread dot placeholder */}
-                  {/* <div className="w-2 h-2 bg-[#25d366] rounded-full ml-2" /> */}
+                  {unreadCount > 0 && (
+                    <div className="min-w-[20px] h-5 bg-[#25d366] rounded-full flex items-center justify-center px-1.5 ml-2 shadow-sm">
+                      <span className="text-[10px] text-white font-bold">{unreadCount}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </Link>

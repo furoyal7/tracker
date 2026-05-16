@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function SocketInitializer() {
   const { user } = useAuthStore();
-  const { receiveMessage, setOnlineUsers, setTyping } = useChatStore();
+  const { receiveMessage, setOnlineUsers, setTyping, deleteMessage } = useChatStore();
 
   useEffect(() => {
     if (user?.id) {
@@ -25,11 +25,16 @@ export default function SocketInitializer() {
         socket.on('typing', ({ chatId, userId, isTyping }) => {
           setTyping(chatId, userId, isTyping);
         });
+        
+        socket.on('messageDeleted', ({ chatId, messageId }) => {
+          deleteMessage(chatId, messageId);
+        });
 
         return () => {
           socket.off('receiveMessage');
           socket.off('onlineUsers');
           socket.off('typing');
+          socket.off('messageDeleted');
         };
       }
     } else {

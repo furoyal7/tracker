@@ -81,7 +81,7 @@ export const createSale = async (userId, saleData) => {
 
       // 4. If there's a balance, create a Debt (Receivable)
       if (balance > 0.01) {
-        await tx.debt.create({
+        const debt = await tx.debt.create({
           data: {
             userId,
             name: customerName || 'Walk-in Customer',
@@ -93,6 +93,17 @@ export const createSale = async (userId, saleData) => {
             status: 'UNPAID'
           }
         });
+
+        // Record the initial payment if any
+        if (parsedPaid > 0) {
+          await tx.payment.create({
+            data: {
+              debtId: debt.id,
+              amount: parsedPaid,
+              date: new Date(),
+            }
+          });
+        }
       }
 
       return sale;

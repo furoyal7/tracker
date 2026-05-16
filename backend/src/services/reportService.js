@@ -12,20 +12,12 @@ export const getFinancialSummary = async (userId) => {
 
   try {
     // 1. Efficient Aggregations using Prisma
-    const [totals, dailyTotals, debtTotals, productsCount] = await Promise.all([
+    // We'll avoid complex groupBy on DateTime fields as it can be unstable with some adapters
+    const [totals, debtTotals, productsCount, recentDailyTxs] = await Promise.all([
       // Total Income & Expense
       prisma.transaction.groupBy({
         by: ['type'],
         where: { userId },
-        _sum: { amount: true },
-      }),
-      // Today vs Yesterday Totals
-      prisma.transaction.groupBy({
-        by: ['type', 'date'],
-        where: { 
-          userId,
-          date: { gte: yesterdayStart, lte: todayEnd }
-        },
         _sum: { amount: true },
       }),
       // Debt Totals
@@ -36,7 +28,22 @@ export const getFinancialSummary = async (userId) => {
       }),
       // Inventory stats
       prisma.product.count({ where: { userId, quantity: 0 } }),
+      // Fetch transactions for today/yesterday for in-memory processing (more stable)
+      prisma.transaction.findMany({
+        where: { 
+          userId,
+          date: { gte: yesterdayStart, lte: todayEnd }
+        },
+        select: { type: true, amount: true, date: true }
+      })
     ]);
+
+    // Process daily totals from the fetched transactions
+    const dailyTotals = recentDailyTxs.map(t => ({
+      type: t.type,
+      date: t.date,
+      _sum: { amount: t.amount }
+    }));
 
     // 2. Process Basic Totals
     const totalIncome = totals.find(t => t.type === 'INCOME')?._sum.amount || 0;

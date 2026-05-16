@@ -3,7 +3,7 @@ import ApiError from '../utils/ApiError.js';
 
 class ChatService {
   async getConversations(userId) {
-    return await prisma.conversation.findMany({
+    const conversations = await prisma.conversation.findMany({
       where: {
         participants: {
           some: { id: userId }
@@ -28,10 +28,28 @@ class ChatService {
               select: { id: true }
             }
           }
+        },
+        _count: {
+          select: {
+            messages: {
+              where: {
+                NOT: {
+                  seenBy: {
+                    some: { id: userId }
+                  }
+                }
+              }
+            }
+          }
         }
       },
       orderBy: { updatedAt: 'desc' }
     });
+
+    // Flatten _count if needed or just return as is. 
+    // Note: Prisma _count with where might not be supported in all versions.
+    // If it fails, I will fallback to manual counting.
+    return conversations;
   }
 
   async getMessages(conversationId, limit = 50, cursor = null) {

@@ -81,6 +81,7 @@ export const findByUsername = async (username) => {
       id: true,
       username: true,
       name: true,
+      avatarUrl: true,
     }
   });
 };
