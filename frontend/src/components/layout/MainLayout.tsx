@@ -35,11 +35,12 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
           // Only show notification if:
           // 1. Message is NOT from the current user
           // 2. User is NOT currently in the conversation room
-          const currentChatId = pathname?.split('/').pop();
+          const isChatPage = pathname?.startsWith('/chat/');
+          const currentChatId = isChatPage ? pathname.split('/')[2] : null;
           
-          if (message.senderId !== user.id && message.conversationId !== currentChatId) {
+          if (message.senderId !== user.id && message.chatId !== currentChatId) {
             toast(
-              <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push(`/chat/${message.conversationId}`)}>
+              <div className="flex items-center gap-4 cursor-pointer" onClick={() => router.push(`/chat/${message.chatId}`)}>
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0">
                   <MessageSquare className="w-5 h-5" />
                 </div>
@@ -57,9 +58,9 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
           }
         };
 
-        socket.on('receive_message', handleNewMessage);
+        socket.on('receiveMessage', handleNewMessage);
         return () => {
-          socket.off('receive_message', handleNewMessage);
+          socket.off('receiveMessage', handleNewMessage);
         };
       }
     }

@@ -52,6 +52,8 @@ interface ChatState {
   setOnlineUsers: (userIds: string[]) => void;
   setTyping: (chatId: string, userId: string, isTyping: boolean) => void;
   markSeen: (chatId: string, messageIds: string[]) => void;
+  setSeen: (chatId: string, messageIds: string[], userId: string) => void;
+  deleteMessage: (chatId: string, messageId: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -69,16 +71,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const response: any = await api.get('/chat/list');
       const conversations = response.data || [];
       
-      // Calculate unread counts
       const unreadCounts: Record<string, number> = {};
-      const authStore = useAuthStore?.getState?.();
-      const user = authStore?.user;
-      
-      conversations.forEach((chat: Chat) => {
-        const lastMsg = chat.messages?.[0];
-        if (lastMsg && lastMsg.senderId !== user?.id && !lastMsg.seenBy?.some(p => p.id === user?.id)) {
-          unreadCounts[chat.id] = (unreadCounts[chat.id] || 0) + 1;
-        }
+      conversations.forEach((chat: any) => {
+        unreadCounts[chat.id] = chat._count?.messages || 0;
       });
 
       set({ conversations, unreadCounts });
@@ -93,10 +88,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   fetchMessages: async (chatId) => {
     try {
       const response: any = await api.get(`/message/${chatId}`);
+      console.log(`[ChatStore] fetchMessages response for ${chatId}:`, response);
+      const messagesArray = response.data || [];
+      
       set((state) => ({
         messages: {
           ...state.messages,
-          [chatId]: response.data || []
+          [chatId]: Array.isArray(messagesArray) ? messagesArray : []
         }
       }));
     } catch (error: any) {
@@ -154,7 +152,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 
     set((state) => {
-      const chatMessages = state.messages[message.chatId] || [];
+      const chatMessages = Array.isArray(state.messages[message.chatId]) ? state.messages[message.chatId] : [];
       
       // Handle optimistic message replacement if it's from current user
       let updatedMessages;
@@ -241,6 +239,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
         unreadCounts: {
           ...state.unreadCounts,
           [chatId]: 0
+        }
+      };
+    });
+  },
+
+  setSeen: (chatId, messageIds, userId) => {
+    set((state) => {
+      const chatMessages = state.messages[chatId] || [];
+      const updatedMessages = chatMessages.map(m => {
+        if (messageIds.includes(m.id)) {
+          const alreadySeen = m.seenBy.some(p => p.id === userId);
+          if (!alreadySeen) {
+            return { ...m, seenBy: [...m.seenBy, { id: userId }] };
+          }
+        }
+        return m;
+      });
+
+      return {
+        messages: {
+          ...state.messages,
+          [chatId]: updatedMessages
         }
       };
     });

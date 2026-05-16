@@ -4,6 +4,25 @@ import { config } from './src/config/env.js';
 import initSocket from './src/sockets/socket.js';
 import prisma from './src/lib/prisma.js';
 
+// 🔍 GLOBAL ERROR HANDLING FOR CRASH DEBUGGING
+process.on('uncaughtException', (err) => {
+  console.error('------------------------------------------------');
+  console.error('🔥 UNCAUGHT EXCEPTION - CRITICAL CRASH');
+  console.error('TIME:', new Date().toISOString());
+  console.error('MESSAGE:', err.message);
+  console.error('STACK:', err.stack);
+  console.error('------------------------------------------------');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('------------------------------------------------');
+  console.error('🔥 UNHANDLED REJECTION');
+  console.error('TIME:', new Date().toISOString());
+  console.error('REASON:', reason);
+  console.error('------------------------------------------------');
+});
+
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 

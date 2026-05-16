@@ -106,7 +106,7 @@ export default function ChatScreen({
 
       {/* Message List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat">
-        {messages.map((msg) => {
+        {Array.isArray(messages) && messages.map((msg) => {
           const isMe = msg.senderId === currentUserId;
           const isSeen = msg.seenBy?.some(p => p.id !== currentUserId);
           const isTemp = msg.id.startsWith('temp-');
